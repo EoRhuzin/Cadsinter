@@ -866,6 +866,28 @@ export const ApiModal: React.FC<ApiModalProps> = ({ isOpen, onClose, records }) 
                 </pre>
               </div>
 
+              {/* Video Tutorial SINTER */}
+              <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs space-y-3">
+                <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center space-x-2">
+                  <Play className="w-4 h-4 text-rose-600" />
+                  <span>Vídeo Tutorial Oficial: Como obter as Credenciais no SINTER</span>
+                </h3>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Assista abaixo ao vídeo explicativo oficial demonstrando passo a passo como realizar o credenciamento e obter o <strong>Client ID</strong> e <strong>Client Secret</strong> no portal do SINTER da Receita Federal:
+                </p>
+                <div className="relative w-full overflow-hidden rounded-xl border border-slate-200 bg-slate-900 aspect-video max-w-2xl mx-auto shadow-2xs">
+                  <iframe
+                    className="absolute top-0 left-0 w-full h-full"
+                    src="https://www.youtube.com/embed/QEEckE_Fn_8?si=m7KGqTG7mejUJo4m"
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+              </div>
+
             </div>
           )}
 

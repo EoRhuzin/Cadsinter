@@ -62,6 +62,7 @@ interface RecordFormProps {
   onStartTutorialTipo1?: () => void;
   onStartTutorialTipo2?: () => void;
   onStartTutorialTipo3?: () => void;
+  onStartTutorialOverview?: () => void;
 }
 
 export const RecordForm: React.FC<RecordFormProps> = ({
@@ -72,6 +73,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({
   onStartTutorialTipo1,
   onStartTutorialTipo2,
   onStartTutorialTipo3,
+  onStartTutorialOverview,
 }) => {
   const [dadosGerais, setDadosGerais] = useState<DadosGeraisImovel>(DEFAULT_RECORD_DADOS);
   const [endereco, setEndereco] = useState<EnderecoImovel>(DEFAULT_RECORD_ENDERECO);
@@ -81,6 +83,9 @@ export const RecordForm: React.FC<RecordFormProps> = ({
   const [cartorioNotas, setCartorioNotas] = useState<CartorioNotas>({});
   const [itbi, setItbi] = useState<ITBI>({});
   const [operacao, setOperacao] = useState<string>(DEFAULT_OPERACAO);
+
+  // Dropdown state for tutorials
+  const [isTutorialDropdownOpen, setIsTutorialDropdownOpen] = useState(false);
 
   // Tutorial Step flags
   const isTutorialTipo1 = tutorialMode === 'type1';
@@ -407,54 +412,113 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         {/* Mode Selector & Quick Examples */}
         <div className="flex flex-wrap items-center gap-2.5">
           
-          {/* Quick Tutorials Selection Buttons */}
-          <div className="flex items-center gap-1.5">
-            {onStartTutorialTipo1 && (
-              <button
-                type="button"
-                onClick={onStartTutorialTipo1}
-                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  isTutorialTipo1
-                    ? 'bg-rose-600 text-white shadow-xs'
-                    : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
-                }`}
-                title="Iniciar Tutorial: Como Criar Imóvel Tipo 1 (Territorial)"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
-                <span>Tut. Tipo 1</span>
-              </button>
-            )}
+          {/* Quick Tutorials Selection Dropdown */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsTutorialDropdownOpen(!isTutorialDropdownOpen)}
+              className={`flex items-center space-x-2 px-3 py-1.5 rounded-xl text-xs font-bold transition-all border shadow-2xs cursor-pointer active:scale-98 ${
+                isTutorialActive
+                  ? 'bg-indigo-600 text-white border-indigo-500'
+                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+              }`}
+              title="Selecione um tutorial interativo guiado passo a passo"
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${isTutorialActive ? 'text-amber-300 animate-pulse' : 'text-indigo-500'}`} />
+              <span>
+                {isTutorialTipo1 && 'Tutorial: Tipo 1 (Territorial)'}
+                {isTutorialTipo2 && 'Tutorial: Tipo 2 (Predial)'}
+                {isTutorialTipo3 && 'Tutorial: Tipo 3 (BICE)'}
+                {!isTutorialActive && 'Tutoriais Guiados'}
+              </span>
+              {isTutorialDropdownOpen ? (
+                <ChevronUp className="w-3.5 h-3.5" />
+              ) : (
+                <ChevronDown className="w-3.5 h-3.5" />
+              )}
+            </button>
 
-            {onStartTutorialTipo2 && (
-              <button
-                type="button"
-                onClick={onStartTutorialTipo2}
-                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  isTutorialTipo2
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
-                }`}
-                title="Iniciar Tutorial: Como Criar Imóvel Tipo 2 (Predial)"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Tut. Tipo 2</span>
-              </button>
-            )}
+            {isTutorialDropdownOpen && (
+              <>
+                {/* Backdrop to close dropdown */}
+                <div 
+                  className="fixed inset-0 z-30 cursor-default" 
+                  onClick={() => setIsTutorialDropdownOpen(false)} 
+                />
+                <div className="absolute left-0 mt-1.5 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-1.5 z-40 animate-in fade-in slide-in-from-top-1 duration-150">
+                  <div className="px-3 py-1 text-[10px] font-black text-slate-400 uppercase tracking-wider">
+                    Tutoriais Interativos
+                  </div>
+                  
+                  {onStartTutorialTipo1 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onStartTutorialTipo1();
+                        setIsTutorialDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-rose-50 hover:text-rose-700 text-slate-700 transition-colors flex items-center gap-2"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+                      <div>
+                        <p className="font-bold">Imóvel Tipo 1 (Territorial)</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Lote / Terreno sem construção</p>
+                      </div>
+                    </button>
+                  )}
 
-            {onStartTutorialTipo3 && (
-              <button
-                type="button"
-                onClick={onStartTutorialTipo3}
-                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  isTutorialTipo3
-                    ? 'bg-purple-600 text-white shadow-xs'
-                    : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200'
-                }`}
-                title="Iniciar Tutorial: Como Criar Imóvel Tipo 3 (Bem Especial / BICE)"
-              >
-                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
-                <span>Tut. Tipo 3</span>
-              </button>
+                  {onStartTutorialTipo2 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onStartTutorialTipo2();
+                        setIsTutorialDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-indigo-50 hover:text-indigo-700 text-slate-700 transition-colors flex items-center gap-2"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
+                      <div>
+                        <p className="font-bold">Imóvel Tipo 2 (Predial)</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Edificado / Casa / Apartamento</p>
+                      </div>
+                    </button>
+                  )}
+
+                  {onStartTutorialTipo3 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onStartTutorialTipo3();
+                        setIsTutorialDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-purple-50 hover:text-purple-700 text-slate-700 transition-colors flex items-center gap-2"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0" />
+                      <div>
+                        <p className="font-bold">Imóvel Tipo 3 (Bem Especial)</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Características Especiais / BICE</p>
+                      </div>
+                    </button>
+                  )}
+
+                  {onStartTutorialOverview && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onStartTutorialOverview();
+                        setIsTutorialDropdownOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-xs font-semibold hover:bg-slate-50 hover:text-slate-900 text-slate-700 border-t border-slate-100 mt-1 transition-colors flex items-center gap-2"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-slate-500 shrink-0" />
+                      <div>
+                        <p className="font-bold text-slate-800">Visão Geral da Plataforma</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Tour completo da central SINTER</p>
+                      </div>
+                    </button>
+                  )}
+                </div>
+              </>
             )}
           </div>
 

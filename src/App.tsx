@@ -350,6 +350,7 @@ export default function App() {
               onStartTutorialTipo1={handleStartTutorialTipo1}
               onStartTutorialTipo2={handleStartTutorialTipo2}
               onStartTutorialTipo3={handleStartTutorialTipo3}
+              onStartTutorialOverview={() => handleStartTutorialTour('overview')}
             />
 
             {/* Record Table List */}
