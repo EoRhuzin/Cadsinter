@@ -141,6 +141,50 @@ Se o seu município utiliza a transmissão automatizada via webservice API REST:
 
 ---
 
+## 🚀 Publicação no GitHub Pages com GitHub Actions
+
+### 1. Por que usar o GitHub Actions?
+Projetos modernos desenvolvidos em **React + Vite + TypeScript** possuem código-fonte em formato que os navegadores não executam diretamente (como arquivos `.tsx`, definições de tipo do TypeScript e escopos de módulos sem empacotamento).
+
+Para o site funcionar publicamente na web, esses arquivos precisam ser **compilados, empacotados e otimizados**, gerando os artefatos estáticos na pasta de saída `dist/` (contendo apenas HTML, CSS e JS puro).
+
+- **Sem o Actions (O jeito que dá erro)**: O GitHub Pages tenta entregar os arquivos brutos do código-fonte (`src/App.tsx`, etc.) diretamente ao navegador. Como o navegador não sabe executar TypeScript/React sem compilação, a página resulta em tela em branco ou erro 404.
+- **Com o Actions (O jeito correto)**: Sempre que você faz um `git push` para a branch `main`, o GitHub cria temporariamente um servidor virtual em nuvem, instala as dependências (`npm ci`), executa a compilação (`npm run build`), captura a pasta `dist/` resultante e a publica automaticamente no GitHub Pages.
+
+---
+
+### 2. O que faz a mudança no `vite.config.ts`?
+Quando o site é publicado no GitHub Pages em um repositório, o endereço final fica sob o caminho do repositório:
+`https://eorhuzin.github.io/Cadsinter/`
+
+Se o Vite não for informado sobre essa subpasta `/Cadsinter/`, ele tentará buscar os scripts e folhas de estilo na raiz do domínio (`https://eorhuzin.github.io/assets/...`), resultando em erros **404 Not Found**.
+
+A linha abaixo no `vite.config.ts` instrui o Vite a prefixar todos os caminhos dos arquivos compilados com `/Cadsinter/`:
+
+```typescript
+// vite.config.ts
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  base: '/Cadsinter/', // Garante que todos os assets iniciem em /Cadsinter/
+  // ...
+});
+```
+
+---
+
+### 3. O que faz o arquivo `.github/workflows/deploy.yml`?
+Esse arquivo é o fluxo de automação para a nuvem do GitHub executar o build. Ele realiza a seguinte sequência:
+
+- **Trigger (`on: push` na `main`)**: Dispara a automação a cada atualização no código.
+- **Permissões (`permissions`)**: Concede autorização segura para publicar artefatos no GitHub Pages.
+- **Passos (`steps`)**:
+  1. **Checkout**: Baixa o código para o servidor do GitHub.
+  2. **Setup Node.js & Install**: Configura a versão do Node.js e instala as dependências do `package.json`.
+  3. **Build**: Executa `npm run build` gerando a pasta `dist/`.
+  4. **Upload & Deploy**: Envia o conteúdo compilado de `./dist` para os servidores do GitHub Pages.
+
+---
 
 ## 🔒 Segurança e Privacidade
 
