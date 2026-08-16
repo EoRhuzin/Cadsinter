@@ -1,0 +1,6 @@
+{
+  "name": "CadSinter",
+  "description": "Sistema de Gestão e Integrador Cadastral Municipal para SINTER e CADURB.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
