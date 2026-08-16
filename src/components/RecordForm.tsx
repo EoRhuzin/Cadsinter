@@ -57,9 +57,22 @@ interface RecordFormProps {
   onAddRecord: (record: Omit<NDJsonRecord, 'id'>) => void;
   onAddBatchRecords: (records: Omit<NDJsonRecord, 'id'>[]) => void;
   lastAddedCount: number;
+  tutorialMode?: 'type1' | 'type2' | 'type3' | 'overview' | null;
+  tutorialStep?: number | null;
+  onStartTutorialTipo1?: () => void;
+  onStartTutorialTipo2?: () => void;
+  onStartTutorialTipo3?: () => void;
 }
 
-export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchRecords }) => {
+export const RecordForm: React.FC<RecordFormProps> = ({
+  onAddRecord,
+  onAddBatchRecords,
+  tutorialMode = null,
+  tutorialStep = null,
+  onStartTutorialTipo1,
+  onStartTutorialTipo2,
+  onStartTutorialTipo3,
+}) => {
   const [dadosGerais, setDadosGerais] = useState<DadosGeraisImovel>(DEFAULT_RECORD_DADOS);
   const [endereco, setEndereco] = useState<EnderecoImovel>(DEFAULT_RECORD_ENDERECO);
   const [areaConstruidaCompl, setAreaConstruidaCompl] = useState<AreaConstruidaCompl>({});
@@ -68,6 +81,106 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
   const [cartorioNotas, setCartorioNotas] = useState<CartorioNotas>({});
   const [itbi, setItbi] = useState<ITBI>({});
   const [operacao, setOperacao] = useState<string>(DEFAULT_OPERACAO);
+
+  // Tutorial Step flags
+  const isTutorialTipo1 = tutorialMode === 'type1';
+  const isTutorialTipo2 = tutorialMode === 'type2';
+  const isTutorialTipo3 = tutorialMode === 'type3';
+  const isTutorialActive = isTutorialTipo1 || isTutorialTipo2 || isTutorialTipo3;
+  const isTutorialTipo1Step3 = isTutorialTipo1 && tutorialStep === 2; // Step 3: Campos obrigatórios do Tipo 1 em vermelho
+  const isTutorialTipo2Step3 = isTutorialTipo2 && tutorialStep === 2; // Step 3: Campos obrigatórios do Tipo 2 em vermelho
+  const isTutorialTipo3Step3 = isTutorialTipo3 && tutorialStep === 2; // Step 3: Campos obrigatórios do Tipo 3 em vermelho
+  const isTutorialStep3 = isTutorialTipo1Step3 || isTutorialTipo2Step3 || isTutorialTipo3Step3;
+
+  // Fill sample data for Tipo 1 helper (Territorial)
+  const handleFillSampleTipo1 = () => {
+    setDadosGerais({
+      ...DEFAULT_RECORD_DADOS,
+      inscricaoImobiliaria: '01010010001',
+      tipoImovel: 1,
+      areaTerreno: 360.0,
+      temBairro: true,
+      tpArquitetonico: 0,
+      destinacaoImovel: 0,
+      areaConstruida: 0,
+      anoConstrutivo: 0,
+      bice: 0,
+    });
+    setEndereco({
+      tipoLogradouro: 250, // Rua
+      nomeLogradouro: 'Rua das Palmeiras',
+      bairro: 'Centro',
+      numeroImovel: '120',
+      complNroImovel: 'Lote 15',
+      cep: '45653758',
+    });
+    setAreaConstruidaCompl({});
+    setTitulares([]);
+    setServicoRegistroImovel({});
+    setCartorioNotas({});
+    setItbi({});
+    setHasAttemptedSubmit(false);
+  };
+
+  // Fill sample data for Tipo 2 helper (Predial)
+  const handleFillSampleTipo2 = () => {
+    setDadosGerais({
+      ...DEFAULT_RECORD_DADOS,
+      inscricaoImobiliaria: '02020020002',
+      tipoImovel: 2,
+      areaTerreno: 250.0,
+      temBairro: true,
+      areaConstruida: 145.5,
+      anoConstrutivo: 2018,
+      tpArquitetonico: 1, // Casa
+      destinacaoImovel: 1, // Residencial
+      bice: 0,
+    });
+    setEndereco({
+      tipoLogradouro: 250, // Rua
+      nomeLogradouro: 'Avenida Brasil',
+      bairro: 'Jardim América',
+      numeroImovel: '450',
+      complNroImovel: 'Casa',
+      cep: '45653758',
+    });
+    setAreaConstruidaCompl({});
+    setTitulares([]);
+    setServicoRegistroImovel({});
+    setCartorioNotas({});
+    setItbi({});
+    setHasAttemptedSubmit(false);
+  };
+
+  // Fill sample data for Tipo 3 helper (Bem Especial / BICE)
+  const handleFillSampleTipo3 = () => {
+    setDadosGerais({
+      ...DEFAULT_RECORD_DADOS,
+      inscricaoImobiliaria: '03030030003',
+      tipoImovel: 3,
+      areaTerreno: 1200.0,
+      temBairro: true,
+      tpArquitetonico: 0,
+      destinacaoImovel: 0,
+      areaConstruida: 0,
+      anoConstrutivo: 0,
+      bice: 1, // Praças e Parques
+    });
+    setEndereco({
+      tipoLogradouro: 250, // Rua
+      nomeLogradouro: 'Praça da Matriz',
+      bairro: 'Centro',
+      numeroImovel: 'S/N',
+      complNroImovel: 'Parque Municipal',
+      cep: '45653758',
+    });
+    setAreaConstruidaCompl({});
+    setTitulares([]);
+    setServicoRegistroImovel({});
+    setCartorioNotas({});
+    setItbi({});
+    setHasAttemptedSubmit(false);
+  };
 
   // Form Mode: Simples (Obrigatórios/Básicos) vs Avançado (Todos os campos adicionais opcionais)
   const [formMode, setFormMode] = useState<'simples' | 'avancado'>('simples');
@@ -292,8 +405,59 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
         </div>
 
         {/* Mode Selector & Quick Examples */}
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
           
+          {/* Quick Tutorials Selection Buttons */}
+          <div className="flex items-center gap-1.5">
+            {onStartTutorialTipo1 && (
+              <button
+                type="button"
+                onClick={onStartTutorialTipo1}
+                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isTutorialTipo1
+                    ? 'bg-rose-600 text-white shadow-xs'
+                    : 'bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200'
+                }`}
+                title="Iniciar Tutorial: Como Criar Imóvel Tipo 1 (Territorial)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                <span>Tut. Tipo 1</span>
+              </button>
+            )}
+
+            {onStartTutorialTipo2 && (
+              <button
+                type="button"
+                onClick={onStartTutorialTipo2}
+                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isTutorialTipo2
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200'
+                }`}
+                title="Iniciar Tutorial: Como Criar Imóvel Tipo 2 (Predial)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-indigo-500" />
+                <span>Tut. Tipo 2</span>
+              </button>
+            )}
+
+            {onStartTutorialTipo3 && (
+              <button
+                type="button"
+                onClick={onStartTutorialTipo3}
+                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  isTutorialTipo3
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200'
+                }`}
+                title="Iniciar Tutorial: Como Criar Imóvel Tipo 3 (Bem Especial / BICE)"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-500" />
+                <span>Tut. Tipo 3</span>
+              </button>
+            )}
+          </div>
+
           {/* Modo de Envio: Simples vs Avançado */}
           <div className="flex items-center bg-slate-200/80 p-1 rounded-xl border border-slate-300/70 shadow-2xs">
             <button
@@ -348,6 +512,105 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
         </div>
       </div>
 
+      {/* Tutorial Active Top Guide Banner (Tipo 1, Tipo 2 ou Tipo 3) */}
+      {isTutorialActive && (
+        <div className={`mx-6 mt-4 p-4 rounded-2xl border-2 shadow-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 animate-in fade-in duration-300 ${
+          isTutorialTipo1
+            ? 'bg-gradient-to-r from-rose-50 via-amber-50 to-indigo-50 border-rose-400'
+            : isTutorialTipo2
+            ? 'bg-gradient-to-r from-indigo-50 via-sky-50 to-teal-50 border-indigo-400'
+            : 'bg-gradient-to-r from-purple-50 via-fuchsia-50 to-pink-50 border-purple-400'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <div className={`w-10 h-10 rounded-xl text-white flex items-center justify-center font-black text-xs shrink-0 shadow-md ${
+              isTutorialTipo1
+                ? 'bg-rose-600 shadow-rose-200'
+                : isTutorialTipo2
+                ? 'bg-indigo-600 shadow-indigo-200'
+                : 'bg-purple-600 shadow-purple-200'
+            }`}>
+              {isTutorialTipo1 ? 'TIPO 1' : isTutorialTipo2 ? 'TIPO 2' : 'TIPO 3'}
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <span className="text-xs font-black text-slate-900">
+                  {isTutorialTipo1 && 'Tutorial Imóvel Tipo 1 (Territorial / Lote)'}
+                  {isTutorialTipo2 && 'Tutorial Imóvel Tipo 2 (Predial / Edificado)'}
+                  {isTutorialTipo3 && 'Tutorial Imóvel Tipo 3 (Bem Especial / BICE)'}
+                </span>
+                <span className={`text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full uppercase ${
+                  isTutorialTipo1 ? 'bg-rose-600' : isTutorialTipo2 ? 'bg-indigo-600' : 'bg-purple-600'
+                }`}>
+                  {tutorialStep === 0 && 'Passo 1 de 4 • Inscrição'}
+                  {tutorialStep === 1 && 'Passo 2 de 4 • Tipo do Imóvel'}
+                  {tutorialStep === 2 && 'Passo 3 de 4 • Campos Obrigatórios em Vermelho'}
+                  {tutorialStep === 3 && 'Passo 4 de 4 • Gravar e Finalizar'}
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-700 font-medium mt-0.5">
+                {isTutorialTipo1 && (
+                  <>
+                    {tutorialStep === 0 && '1. Digite a Inscrição Imobiliária municipal do imóvel no campo em destaque.'}
+                    {tutorialStep === 1 && '2. Selecione o Tipo do Imóvel = "1 - Territorial (Lote / Terreno)".'}
+                    {tutorialStep === 2 && '3. Observe abaixo: todos os 8 campos obrigatórios para o Tipo 1 estão marcados em VERMELHO para rápida identificação!'}
+                    {tutorialStep === 3 && '4. Clique no botão "+ Incluir Registro no JSON" (ou Ctrl+Enter) para gravar o imóvel na lista!'}
+                  </>
+                )}
+                {isTutorialTipo2 && (
+                  <>
+                    {tutorialStep === 0 && '1. Digite a Inscrição Imobiliária municipal do imóvel predial.'}
+                    {tutorialStep === 1 && '2. Selecione o Tipo do Imóvel = "2 - Predial (Edificado / Construção)".'}
+                    {tutorialStep === 2 && '3. Observe: para Tipo 2, além dos básicos, são obrigatórios Tipo Arquitetônico, Destinação, Área Construída (> 0 m²) e Ano Construtivo!'}
+                    {tutorialStep === 3 && '4. Clique no botão "+ Incluir Registro no JSON" (ou Ctrl+Enter) para gravar a edificação no lote!'}
+                  </>
+                )}
+                {isTutorialTipo3 && (
+                  <>
+                    {tutorialStep === 0 && '1. Digite a Inscrição Imobiliária municipal do bem público / especial.'}
+                    {tutorialStep === 1 && '2. Selecione o Tipo do Imóvel = "3 - Bem de Características Especiais (BICE)".'}
+                    {tutorialStep === 2 && '3. Observe: para Tipo 3, o campo "Código BICE" fica desbloqueado e obrigatório com os códigos da tabela SINTER!'}
+                    {tutorialStep === 3 && '4. Clique no botão "+ Incluir Registro no JSON" (ou Ctrl+Enter) para registrar o bem especial no lote!'}
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {isTutorialTipo1 && (
+              <button
+                type="button"
+                onClick={handleFillSampleTipo1}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Preencher Exemplo Tipo 1</span>
+              </button>
+            )}
+            {isTutorialTipo2 && (
+              <button
+                type="button"
+                onClick={handleFillSampleTipo2}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Preencher Exemplo Tipo 2</span>
+              </button>
+            )}
+            {isTutorialTipo3 && (
+              <button
+                type="button"
+                onClick={handleFillSampleTipo3}
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                <span>Preencher Exemplo Tipo 3</span>
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Global Validation Errors Alert */}
       {hasAttemptedSubmit && !validationResult.isValid && (
         <div className="mx-6 mt-4 p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-900 space-y-1.5 animate-shake">
@@ -385,7 +648,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* 1. Inscrição Imobiliária */}
-            <div>
+            <div id="tutorial-field-inscricao">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-800">
                   Inscrição Imobiliária <span className="text-rose-500">*</span>
@@ -409,8 +672,8 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   value={dadosGerais.inscricaoImobiliaria}
                   onChange={(e) => setDadosGerais({ ...dadosGerais, inscricaoImobiliaria: sanitizeTextInput(e.target.value) })}
                   className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 font-mono shadow-2xs transition-all ${
-                    hasAttemptedSubmit && fieldErrors['inscricaoImobiliaria']
-                      ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                    isTutorialStep3 || (hasAttemptedSubmit && fieldErrors['inscricaoImobiliaria'])
+                      ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                       : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                   }`}
                 />
@@ -424,13 +687,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   {(dadosGerais.inscricaoImobiliaria || '').length}/45
                 </span>
               </div>
-              {hasAttemptedSubmit && fieldErrors['inscricaoImobiliaria'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 1. Obrigatório: Inscrição Imobiliária</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['inscricaoImobiliaria'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['inscricaoImobiliaria']}</p>
               )}
             </div>
 
             {/* 2. Tipo do Imóvel */}
-            <div>
+            <div id="tutorial-field-tipo-imovel">
               <SearchableSelect
                 label="Tipo do Imóvel (tipoImovel) *"
                 rightLabelElement={
@@ -447,7 +716,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={dadosGerais.tipoImovel}
                 options={TIPO_IMOVEL_OPTIONS}
                 placeholder="Selecione o Tipo do Imóvel..."
-                hasError={hasAttemptedSubmit && !!fieldErrors['tipoImovel']}
+                hasError={isTutorialStep3 || (hasAttemptedSubmit && !!fieldErrors['tipoImovel'])}
                 onChange={(val) => {
                   const newTipo = Number(val);
                   setDadosGerais((prev) => ({
@@ -466,13 +735,21 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   ? 'Tipo 3: Bem Especial (BICE)'
                   : 'Selecione o tipo do imóvel'}
               </p>
-              {hasAttemptedSubmit && fieldErrors['tipoImovel'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>
+                    🔴 2. Obrigatório: Tipo {isTutorialTipo1 ? '1 (Territorial)' : isTutorialTipo2 ? '2 (Predial)' : '3 (Bem Especial)'}
+                  </span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['tipoImovel'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['tipoImovel']}</p>
               )}
             </div>
 
             {/* 3. Área Terreno */}
-            <div>
+            <div id="tutorial-field-area-terreno">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-800">
                   Área Terreno (m²) <span className="text-rose-500">*</span>
@@ -498,8 +775,8 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   setDadosGerais({ ...dadosGerais, areaTerreno: val === '' ? 0 : parseFloat(val) });
                 }}
                 className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 font-mono shadow-2xs transition-all ${
-                  hasAttemptedSubmit && fieldErrors['areaTerreno']
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  isTutorialStep3 || (hasAttemptedSubmit && fieldErrors['areaTerreno'])
+                    ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                 }`}
               />
@@ -507,13 +784,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 <span>Regra: 12 inteiros + 4 decimais</span>
                 <span className="font-mono text-indigo-600 font-bold">m²</span>
               </div>
-              {hasAttemptedSubmit && fieldErrors['areaTerreno'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 3. Obrigatório: Área Terreno &gt; 0</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['areaTerreno'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['areaTerreno']}</p>
               )}
             </div>
 
             {/* 4. Tem Bairro? */}
-            <div>
+            <div id="tutorial-field-tem-bairro">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-800">
                   Tem Bairro? (temBairro) <span className="text-rose-500">*</span>
@@ -528,7 +811,11 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   position="top"
                 />
               </div>
-              <div className="flex items-center space-x-4 bg-white border border-slate-200 rounded-xl px-3 py-2 h-[38px] shadow-2xs">
+              <div className={`flex items-center space-x-4 bg-white border rounded-xl px-3 py-2 h-[38px] shadow-2xs ${
+                isTutorialStep3
+                  ? 'border-2 border-rose-500 bg-rose-50/40'
+                  : 'border-slate-200'
+              }`}>
                 <label className="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
                   <input
                     type="radio"
@@ -553,10 +840,16 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
               <p className="text-[10px] text-slate-500 mt-1">
                 {dadosGerais.temBairro ? 'Bairro obrigatório no endereço' : 'Sem bairro demarcado'}
               </p>
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 4. Obrigatório: Tem Bairro?</span>
+                </div>
+              )}
             </div>
 
             {/* 5. Código BICE (bice) - Exclusivo e Obrigatório para Tipo 3 */}
-            <div className={isTipo3 ? 'col-span-1 sm:col-span-2' : ''}>
+            <div id="tutorial-field-bice" className={isTipo3 ? 'col-span-1 sm:col-span-2' : ''}>
               <SearchableSelect
                 label={`Código BICE (bice) ${isTipo3 ? '*' : ''}`}
                 rightLabelElement={
@@ -574,7 +867,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 options={BICE_OPTIONS}
                 placeholder={isTipo3 ? 'Selecione o Código BICE...' : 'Bloqueado (Apenas para Imóvel Tipo 3)'}
                 disabled={!isTipo3}
-                hasError={hasAttemptedSubmit && isTipo3 && !!fieldErrors['bice']}
+                hasError={isTutorialTipo3Step3 || (hasAttemptedSubmit && isTipo3 && !dadosGerais.bice)}
                 onChange={(val) => setDadosGerais({ ...dadosGerais, bice: Number(val) })}
               />
               <p className="text-[10px] text-slate-400 mt-1">
@@ -582,13 +875,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   ? 'Obrigatório para Imóvel Tipo 3 (Bem de Características Especiais)'
                   : '🔒 Bloqueado • Exclusivo para Imóvel Tipo 3 (BICE)'}
               </p>
-              {hasAttemptedSubmit && isTipo3 && fieldErrors['bice'] && (
+              {isTutorialTipo3Step3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 5. Obrigatório Tipo 3: Código BICE</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && isTipo3 && fieldErrors['bice'] && !isTutorialTipo3Step3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['bice']}</p>
               )}
             </div>
 
             {/* Tipo Arquitetônico */}
-            <div>
+            <div id="tutorial-field-tp-arquitetonico">
               <SearchableSelect
                 label={`Tipo Arquitetônico (tpArquitetonico) ${isTipo2 ? '*' : ''}`}
                 rightLabelElement={
@@ -605,7 +904,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={dadosGerais.tpArquitetonico}
                 options={TP_ARQUITETONICO_OPTIONS}
                 placeholder="Selecione o Tipo Arquitetônico..."
-                hasError={hasAttemptedSubmit && !!fieldErrors['tpArquitetonico']}
+                hasError={isTutorialTipo2Step3 || (hasAttemptedSubmit && !!fieldErrors['tpArquitetonico'])}
                 onChange={(val) => setDadosGerais({ ...dadosGerais, tpArquitetonico: Number(val) })}
               />
               <p className="text-[10px] text-slate-400 mt-1">
@@ -615,13 +914,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   ? 'Obrigatório para Imóvel Tipo 2 (Predial)'
                   : 'Opcional para Tipo 3'}
               </p>
-              {hasAttemptedSubmit && fieldErrors['tpArquitetonico'] && (
+              {isTutorialTipo2Step3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 5. Obrigatório Tipo 2: Tipo Arquitetônico</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['tpArquitetonico'] && !isTutorialTipo2Step3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['tpArquitetonico']}</p>
               )}
             </div>
 
             {/* Destinação do Imóvel */}
-            <div>
+            <div id="tutorial-field-destinacao">
               <SearchableSelect
                 label={`Destinação do Imóvel (destinacaoImovel) ${isTipo2 ? '*' : ''}`}
                 rightLabelElement={
@@ -638,7 +943,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={dadosGerais.destinacaoImovel}
                 options={DESTINACAO_IMOVEL_OPTIONS}
                 placeholder="Selecione a Destinação..."
-                hasError={hasAttemptedSubmit && !!fieldErrors['destinacaoImovel']}
+                hasError={isTutorialTipo2Step3 || (hasAttemptedSubmit && !!fieldErrors['destinacaoImovel'])}
                 onChange={(val) => setDadosGerais({ ...dadosGerais, destinacaoImovel: Number(val) })}
               />
               <p className="text-[10px] text-slate-400 mt-1">
@@ -648,13 +953,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   ? 'Obrigatório para Imóvel Tipo 2 (Predial)'
                   : 'Opcional para Tipo 3'}
               </p>
-              {hasAttemptedSubmit && fieldErrors['destinacaoImovel'] && (
+              {isTutorialTipo2Step3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 6. Obrigatório Tipo 2: Destinação</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['destinacaoImovel'] && !isTutorialTipo2Step3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['destinacaoImovel']}</p>
               )}
             </div>
 
             {/* Área Construída */}
-            <div>
+            <div id="tutorial-field-area-construida">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-700">
                   Área Construída (m²) {isTipo2 && <span className="text-rose-500">*</span>}
@@ -676,21 +987,27 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={dadosGerais.areaConstruida || ''}
                 onChange={(e) => setDadosGerais({ ...dadosGerais, areaConstruida: parseFloat(e.target.value) || 0 })}
                 className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 font-mono shadow-2xs transition-all ${
-                  hasAttemptedSubmit && fieldErrors['areaConstruida']
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  isTutorialTipo2Step3 || (hasAttemptedSubmit && fieldErrors['areaConstruida'])
+                    ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                 }`}
               />
               <p className="text-[10px] text-slate-400 mt-1">
                 {isTipo1 || isTipo3 ? '0 m² caso sem edificação' : 'Obrigatório para Tipo 2 (> 0 m²)'}
               </p>
-              {hasAttemptedSubmit && fieldErrors['areaConstruida'] && (
+              {isTutorialTipo2Step3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 7. Obrigatório Tipo 2: Área Construída &gt; 0 m²</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['areaConstruida'] && !isTutorialTipo2Step3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['areaConstruida']}</p>
               )}
             </div>
 
             {/* Ano Construtivo */}
-            <div>
+            <div id="tutorial-field-ano-construtivo">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-700">
                   Ano Construtivo {isTipo2 && <span className="text-rose-500">*</span>}
@@ -711,15 +1028,21 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={dadosGerais.anoConstrutivo || ''}
                 onChange={(e) => setDadosGerais({ ...dadosGerais, anoConstrutivo: parseInt(e.target.value, 10) || 0 })}
                 className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 font-mono shadow-2xs transition-all ${
-                  hasAttemptedSubmit && fieldErrors['anoConstrutivo']
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  isTutorialTipo2Step3 || (hasAttemptedSubmit && fieldErrors['anoConstrutivo'])
+                    ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                 }`}
               />
               <p className="text-[10px] text-slate-400 mt-1">
                 {isTipo1 || isTipo3 ? 'Não aplicável (0 ou padrão 1900)' : 'Obrigatório para Tipo 2 (Ex: 1990, 2020)'}
               </p>
-              {hasAttemptedSubmit && fieldErrors['anoConstrutivo'] && (
+              {isTutorialTipo2Step3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 8. Obrigatório Tipo 2: Ano Construtivo</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['anoConstrutivo'] && !isTutorialTipo2Step3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['anoConstrutivo']}</p>
               )}
             </div>
@@ -2261,7 +2584,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             
             {/* 5. Tipo Logradouro */}
-            <div>
+            <div id="tutorial-field-tipo-logradouro">
               <SearchableSelect
                 label="Tipo Logradouro *"
                 rightLabelElement={
@@ -2278,19 +2601,25 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={endereco.tipoLogradouro}
                 options={TIPO_LOGRADOURO_OPTIONS}
                 placeholder="Selecione o Tipo de Logradouro..."
-                hasError={hasAttemptedSubmit && !!fieldErrors['tipoLogradouro']}
+                hasError={isTutorialStep3 || (hasAttemptedSubmit && !!fieldErrors['tipoLogradouro'])}
                 onChange={(val) => setEndereco({ ...endereco, tipoLogradouro: Number(val) })}
               />
               <p className="text-[10px] text-slate-500 mt-1">
                 Código da tabela SINTER (Ex: 250 = RUA)
               </p>
-              {hasAttemptedSubmit && fieldErrors['tipoLogradouro'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 Obrigatório: Tipo Logradouro</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['tipoLogradouro'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['tipoLogradouro']}</p>
               )}
             </div>
 
             {/* 6. Nome Logradouro */}
-            <div>
+            <div id="tutorial-field-nome-logradouro">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-800">
                   Nome do Logradouro <span className="text-rose-500">*</span>
@@ -2312,8 +2641,8 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={endereco.nomeLogradouro}
                 onChange={(e) => setEndereco({ ...endereco, nomeLogradouro: sanitizeTextInput(e.target.value) })}
                 className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 shadow-2xs transition-all ${
-                  hasAttemptedSubmit && fieldErrors['nomeLogradouro']
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  isTutorialStep3 || (hasAttemptedSubmit && fieldErrors['nomeLogradouro'])
+                    ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                 }`}
               />
@@ -2325,13 +2654,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   {(endereco.nomeLogradouro || '').length}/300
                 </span>
               </div>
-              {hasAttemptedSubmit && fieldErrors['nomeLogradouro'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 Obrigatório: Nome Logradouro</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['nomeLogradouro'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['nomeLogradouro']}</p>
               )}
             </div>
 
             {/* 7. Bairro */}
-            <div>
+            <div id="tutorial-field-bairro">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-800">
                   Bairro <span className="text-rose-500">*</span>
@@ -2353,8 +2688,8 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={endereco.bairro}
                 onChange={(e) => setEndereco({ ...endereco, bairro: sanitizeTextInput(e.target.value) })}
                 className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 shadow-2xs transition-all ${
-                  hasAttemptedSubmit && fieldErrors['bairro']
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  isTutorialStep3 || (hasAttemptedSubmit && fieldErrors['bairro'])
+                    ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                 }`}
               />
@@ -2366,13 +2701,19 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   {(endereco.bairro || '').length}/30
                 </span>
               </div>
-              {hasAttemptedSubmit && fieldErrors['bairro'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 Obrigatório: Bairro</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['bairro'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['bairro']}</p>
               )}
             </div>
 
             {/* 8. CEP */}
-            <div>
+            <div id="tutorial-field-cep">
               <div className="flex items-center justify-between mb-1">
                 <label className="block text-xs font-semibold text-slate-800">
                   CEP <span className="text-rose-500">*</span>
@@ -2394,8 +2735,8 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                 value={endereco.cep}
                 onChange={handleCepChange}
                 className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 font-mono shadow-2xs transition-all ${
-                  hasAttemptedSubmit && fieldErrors['cep']
-                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
+                  isTutorialStep3 || (hasAttemptedSubmit && fieldErrors['cep'])
+                    ? 'border-2 border-rose-500 bg-rose-50/40 focus:border-rose-500 focus:ring-rose-500/20'
                     : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
                 }`}
               />
@@ -2407,7 +2748,13 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
                   {(endereco.cep || '').length}/8
                 </span>
               </div>
-              {hasAttemptedSubmit && fieldErrors['cep'] && (
+              {isTutorialStep3 && (
+                <div className="flex items-center gap-1.5 text-[10px] font-extrabold text-rose-700 bg-rose-100 border border-rose-300 px-2 py-0.5 rounded-lg mt-1 shadow-2xs">
+                  <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-ping" />
+                  <span>🔴 Obrigatório: CEP (8 dígitos)</span>
+                </div>
+              )}
+              {hasAttemptedSubmit && fieldErrors['cep'] && !isTutorialStep3 && (
                 <p className="text-[10px] font-medium text-rose-600 mt-1">{fieldErrors['cep']}</p>
               )}
             </div>
@@ -2580,6 +2927,7 @@ export const RecordForm: React.FC<RecordFormProps> = ({ onAddRecord, onAddBatchR
             </button>
 
             <button
+              id="tutorial-submit-btn"
               type="submit"
               className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-6 py-2.5 rounded-xl text-xs font-bold shadow-xs transition-all cursor-pointer ${
                 isTipo1

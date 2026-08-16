@@ -14,6 +14,7 @@ import { ZipModal } from './components/ZipModal';
 import { DonateSection } from './components/DonateSection';
 import { DonateModal } from './components/DonateModal';
 import { SendOptionsDropdown } from './components/SendOptionsDropdown';
+import { TutorialWelcomeModal, TutorialTourOverlay, TutorialMode } from './components/TutorialSystem';
 import {
   FileText,
   Code,
@@ -51,6 +52,64 @@ export default function App() {
   const [isDonateModalOpen, setIsDonateModalOpen] = useState(false);
   const [showDonateBanner, setShowDonateBanner] = useState(true);
   const [editingRecord, setEditingRecord] = useState<NDJsonRecord | null>(null);
+
+  // Tutorial System State
+  const [isTutorialWelcomeOpen, setIsTutorialWelcomeOpen] = useState(false);
+  const [tutorialMode, setTutorialMode] = useState<TutorialMode>('type1');
+  const [tutorialStep, setTutorialStep] = useState<number | null>(null);
+
+  // Auto open tutorial on first visit if not skipped
+  useEffect(() => {
+    try {
+      const skipped = localStorage.getItem('cadsinter_skip_tutorial');
+      if (!skipped) {
+        setIsTutorialWelcomeOpen(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const handleStartTutorialTour = (mode: TutorialMode = 'type1') => {
+    setIsTutorialWelcomeOpen(false);
+    setTutorialMode(mode);
+    setActiveTab('workbench');
+    setTutorialStep(0);
+  };
+
+  const handleStartTutorialTipo1 = () => {
+    setIsTutorialWelcomeOpen(false);
+    setTutorialMode('type1');
+    setActiveTab('workbench');
+    setTutorialStep(0);
+  };
+
+  const handleStartTutorialTipo2 = () => {
+    setIsTutorialWelcomeOpen(false);
+    setTutorialMode('type2');
+    setActiveTab('workbench');
+    setTutorialStep(0);
+  };
+
+  const handleStartTutorialTipo3 = () => {
+    setIsTutorialWelcomeOpen(false);
+    setTutorialMode('type3');
+    setActiveTab('workbench');
+    setTutorialStep(0);
+  };
+
+  const handleNextTutorialStep = () => {
+    setTutorialStep((prev) => (prev !== null ? prev + 1 : 0));
+  };
+
+  const handlePrevTutorialStep = () => {
+    setTutorialStep((prev) => (prev !== null && prev > 0 ? prev - 1 : 0));
+  };
+
+  const handleCloseTutorial = () => {
+    setIsTutorialWelcomeOpen(false);
+    setTutorialStep(null);
+  };
 
   // Save to localStorage
   useEffect(() => {
@@ -202,6 +261,7 @@ export default function App() {
         onOpenApi={() => setIsApiModalOpen(true)}
         onOpenZip={() => setIsZipModalOpen(true)}
         onOpenDonate={() => setIsDonateModalOpen(true)}
+        onOpenTutorial={() => setIsTutorialWelcomeOpen(true)}
       />
 
       {/* Main Content Area */}
@@ -221,6 +281,7 @@ export default function App() {
           
           <div className="flex flex-wrap items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-xl shadow-2xs">
             <button
+              id="tutorial-tab-workbench"
               type="button"
               onClick={() => setActiveTab('workbench')}
               className={`flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -239,6 +300,7 @@ export default function App() {
             </button>
 
             <button
+              id="tutorial-tab-preview"
               type="button"
               onClick={() => setActiveTab('preview')}
               className={`flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold rounded-lg transition-all cursor-pointer ${
@@ -283,6 +345,11 @@ export default function App() {
               onAddRecord={handleAddRecord}
               onAddBatchRecords={handleAddBatchRecords}
               lastAddedCount={records.length}
+              tutorialMode={tutorialStep !== null ? tutorialMode : null}
+              tutorialStep={tutorialStep}
+              onStartTutorialTipo1={handleStartTutorialTipo1}
+              onStartTutorialTipo2={handleStartTutorialTipo2}
+              onStartTutorialTipo3={handleStartTutorialTipo3}
             />
 
             {/* Record Table List */}
@@ -368,6 +435,23 @@ export default function App() {
         onClose={() => setIsClearModalOpen(false)}
         onConfirm={() => setRecords([])}
         count={records.length}
+      />
+
+      {/* Tutorial System Modals */}
+      <TutorialWelcomeModal
+        isOpen={isTutorialWelcomeOpen}
+        onClose={() => setIsTutorialWelcomeOpen(false)}
+        onStartTour={handleStartTutorialTour}
+      />
+
+      <TutorialTourOverlay
+        mode={tutorialMode}
+        activeStep={tutorialStep}
+        recordsCount={records.length}
+        onLoadSamples={handleLoadSamples}
+        onNext={handleNextTutorialStep}
+        onPrev={handlePrevTutorialStep}
+        onClose={handleCloseTutorial}
       />
 
     </div>

@@ -3,6 +3,7 @@ import { ChevronDown, Search, Check, X } from 'lucide-react';
 import { OptionItem } from '../types';
 
 interface SearchableSelectProps {
+  id?: string;
   label?: string;
   rightLabelElement?: React.ReactNode;
   value: string | number;
@@ -15,6 +16,7 @@ interface SearchableSelectProps {
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
+  id,
   label,
   rightLabelElement,
   value,
@@ -65,7 +67,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`} ref={containerRef}>
+    <div id={id} className={`relative ${className}`} ref={containerRef}>
       {(label || rightLabelElement) && (
         <div className="flex items-center justify-between mb-1">
           {label && (

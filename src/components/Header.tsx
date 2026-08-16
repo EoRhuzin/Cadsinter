@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, Sparkles, Database, Trash2, Coffee } from 'lucide-react';
+import { Upload, Sparkles, Database, Trash2, Coffee, GraduationCap } from 'lucide-react';
 import { SendOptionsDropdown } from './SendOptionsDropdown';
 import cadsinterLogo from '../assets/images/cadsinter_logo_1786865365558.jpg';
 
@@ -12,6 +12,7 @@ interface HeaderProps {
   onOpenApi?: () => void;
   onOpenZip?: () => void;
   onOpenDonate?: () => void;
+  onOpenTutorial?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -23,14 +24,15 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenApi,
   onOpenZip,
   onOpenDonate,
+  onOpenTutorial,
 }) => {
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <header id="tutorial-header-root" className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           
           {/* Logo and title */}
-          <div className="flex items-center space-x-3">
+          <div id="tutorial-logo-title" className="flex items-center space-x-3 p-1 rounded-xl transition-all">
             <div className="w-11 h-11 rounded-2xl overflow-hidden border border-indigo-200 shadow-xs shrink-0 bg-indigo-50 p-0.5">
               <img
                 src={cadsinterLogo}
@@ -58,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
             
             {/* Record Counter Badge */}
-            <div className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium">
+            <div id="tutorial-record-counter" className="flex items-center space-x-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-1.5 text-xs font-medium">
               <Database className="w-4 h-4 text-emerald-600" />
               <span className="text-slate-600">Registros:</span>
               <span className={`px-2 py-0.5 rounded-md font-mono font-bold text-xs ${
@@ -73,6 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Load sample data button */}
             {count === 0 && (
               <button
+                id="tutorial-sample-btn"
                 type="button"
                 onClick={onLoadSamples}
                 className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl transition-all cursor-pointer shadow-2xs"
@@ -86,6 +89,7 @@ export const Header: React.FC<HeaderProps> = ({
             {/* Clear All button */}
             {count > 0 && (
               <button
+                id="tutorial-clear-btn"
                 type="button"
                 onClick={onClearAll}
                 className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border border-rose-200 rounded-xl transition-all cursor-pointer shadow-2xs"
@@ -96,8 +100,23 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
+            {/* Tutorial Guia Interativo */}
+            {onOpenTutorial && (
+              <button
+                id="tutorial-guide-btn"
+                type="button"
+                onClick={onOpenTutorial}
+                className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-xl transition-all shadow-2xs cursor-pointer active:scale-98"
+                title="Abrir central de tutoriais interativos passo a passo"
+              >
+                <GraduationCap className="w-4 h-4 text-indigo-600" />
+                <span>Tutoriais</span>
+              </button>
+            )}
+
             {/* Import NDJSON */}
             <button
+              id="tutorial-import-btn"
               type="button"
               onClick={onOpenImport}
               className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-medium bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl transition-all shadow-2xs cursor-pointer"
@@ -107,19 +126,22 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
 
             {/* Opções de Envio Dropdown */}
-            <SendOptionsDropdown
-              count={count}
-              onDownload={onDownload}
-              onOpenApi={onOpenApi}
-              onOpenZip={onOpenZip}
-              variant="primary"
-            />
+            <div id="tutorial-send-options">
+              <SendOptionsDropdown
+                count={count}
+                onDownload={onDownload}
+                onOpenApi={onOpenApi}
+                onOpenZip={onOpenZip}
+                variant="primary"
+              />
+            </div>
 
             {/* ME DOE UM CAFÉ (DONATE) */}
 
             {/* 4. ME DOE UM CAFÉ (DONATE) */}
             {onOpenDonate && (
               <button
+                id="tutorial-donate-btn"
                 type="button"
                 onClick={onOpenDonate}
                 className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 active:scale-98 text-white rounded-xl shadow-xs transition-all cursor-pointer ring-2 ring-amber-400/30 animate-pulse-subtle"

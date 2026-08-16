@@ -1,1 +1,46 @@
 @import "tailwindcss";
+
+@layer utilities {
+  .tutorial-spotlight-active {
+    position: relative !important;
+    z-index: 40 !important;
+    outline: 3px solid #6366f1 !important;
+    outline-offset: 4px !important;
+    border-radius: 1rem !important;
+    animation: tutorialPulse 2s infinite !important;
+  }
+
+  .tutorial-tipo1-required-highlight {
+    position: relative !important;
+    outline: 3px solid #e11d48 !important;
+    outline-offset: 3px !important;
+    border-radius: 0.875rem !important;
+    background-color: rgba(255, 241, 242, 0.6) !important;
+    animation: tutorialRedPulse 1.8s infinite !important;
+  }
+}
+
+@keyframes tutorialPulse {
+  0% {
+    box-shadow: 0 0 0 0px rgba(99, 102, 241, 0.7), 0 0 25px rgba(99, 102, 241, 0.3);
+  }
+  70% {
+    box-shadow: 0 0 0 14px rgba(99, 102, 241, 0), 0 0 35px rgba(99, 102, 241, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(99, 102, 241, 0), 0 0 0px rgba(99, 102, 241, 0);
+  }
+}
+
+@keyframes tutorialRedPulse {
+  0% {
+    box-shadow: 0 0 0 0px rgba(225, 29, 72, 0.7), 0 0 20px rgba(225, 29, 72, 0.25);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(225, 29, 72, 0), 0 0 30px rgba(225, 29, 72, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 0px rgba(225, 29, 72, 0), 0 0 0px rgba(225, 29, 72, 0);
+  }
+}
+
