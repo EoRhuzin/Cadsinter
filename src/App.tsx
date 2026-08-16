@@ -13,6 +13,7 @@ import { ApiModal } from './components/ApiModal';
 import { ZipModal } from './components/ZipModal';
 import { DonateSection } from './components/DonateSection';
 import { DonateModal } from './components/DonateModal';
+import { SendOptionsDropdown } from './components/SendOptionsDropdown';
 import {
   FileText,
   Code,
@@ -250,40 +251,9 @@ export default function App() {
               <span>Código NDJSON Final</span>
             </button>
 
-            <div className="h-4 w-px bg-slate-200 mx-1 hidden sm:block" />
-
-            <button
-              type="button"
-              onClick={handleDownload}
-              disabled={records.length === 0}
-              className="flex items-center space-x-1.5 px-3 py-2 text-xs font-bold text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 rounded-lg transition-all cursor-pointer disabled:opacity-50"
-              title="Baixar arquivo de texto .ndjson"
-            >
-              <span>BAIXAR NDJSON</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsApiModalOpen(true)}
-              className="flex items-center space-x-1.5 px-3 py-2 text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg transition-all cursor-pointer"
-              title="Acessar painel de envio por API REST (SINTER / CADURB)"
-            >
-              <Globe className="w-4 h-4 text-emerald-600" />
-              <span>ENVIAR POR API</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsZipModalOpen(true)}
-              className="flex items-center space-x-1.5 px-3 py-2 text-xs font-bold text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition-all cursor-pointer"
-              title="Baixar arquivo compactado .ZIP contendo o NDJSON"
-            >
-              <FileArchive className="w-4 h-4 text-amber-600" />
-              <span>BAIXAR NDJSON ZIP</span>
-            </button>
           </div>
 
-          {/* Quick Counter Banner */}
+          {/* Quick Counter Banner and Send Options */}
           <div className="flex items-center space-x-3 text-xs text-slate-600">
             <div className="flex items-center space-x-1.5 bg-white border border-slate-200 px-3.5 py-1.5 rounded-xl font-mono shadow-2xs">
               <Database className="w-3.5 h-3.5 text-emerald-600" />
@@ -293,16 +263,13 @@ export default function App() {
               </strong>
             </div>
 
-            {records.length > 0 && (
-              <button
-                type="button"
-                onClick={handleDownload}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-xs transition-all text-xs cursor-pointer"
-              >
-                <Download className="w-3.5 h-3.5" />
-                <span>Baixar NDJSON</span>
-              </button>
-            )}
+            <SendOptionsDropdown
+              count={records.length}
+              onDownload={handleDownload}
+              onOpenApi={() => setIsApiModalOpen(true)}
+              onOpenZip={() => setIsZipModalOpen(true)}
+              variant="primary"
+            />
           </div>
 
         </div>
@@ -330,6 +297,7 @@ export default function App() {
               onClearAll={handleClearAll}
               onDownload={handleDownload}
               onOpenApi={() => setIsApiModalOpen(true)}
+              onOpenZip={() => setIsZipModalOpen(true)}
             />
 
           </div>
@@ -338,7 +306,11 @@ export default function App() {
         {/* Tab 2: Raw NDJSON Preview */}
         {activeTab === 'preview' && (
           <div className="animate-fade-in">
-            <NDJsonPreview records={records} onOpenApi={() => setIsApiModalOpen(true)} />
+            <NDJsonPreview
+              records={records}
+              onOpenApi={() => setIsApiModalOpen(true)}
+              onOpenZip={() => setIsZipModalOpen(true)}
+            />
           </div>
         )}
 

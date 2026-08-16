@@ -8,6 +8,7 @@ import {
   TP_ARQUITETONICO_OPTIONS,
   DESTINACAO_IMOVEL_OPTIONS,
 } from '../constants';
+import { SendOptionsDropdown } from './SendOptionsDropdown';
 import {
   Search,
   Trash2,
@@ -41,6 +42,7 @@ interface RecordListProps {
   onClearAll?: () => void;
   onDownload?: () => void;
   onOpenApi?: () => void;
+  onOpenZip?: () => void;
 }
 
 export const RecordList: React.FC<RecordListProps> = ({
@@ -54,6 +56,7 @@ export const RecordList: React.FC<RecordListProps> = ({
   onClearAll,
   onDownload,
   onOpenApi,
+  onOpenZip,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -140,30 +143,15 @@ export const RecordList: React.FC<RecordListProps> = ({
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
           </div>
 
-          {/* Send via API button */}
-          {onOpenApi && (
-            <button
-              type="button"
-              onClick={onOpenApi}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
-              title="Abrir painel de envio por API REST (SINTER/CADURB)"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>Enviar por API</span>
-            </button>
-          )}
-
-          {/* Download button */}
+          {/* Send options dropdown */}
           {onDownload && (
-            <button
-              type="button"
-              onClick={onDownload}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white rounded-xl text-xs font-bold transition-all shadow-xs cursor-pointer"
-              title="Baixar todos os registros em formato .ndjson"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>Baixar .ndjson</span>
-            </button>
+            <SendOptionsDropdown
+              count={records.length}
+              onDownload={onDownload}
+              onOpenApi={onOpenApi}
+              onOpenZip={onOpenZip}
+              variant="primary"
+            />
           )}
 
           {/* Clear List button */}

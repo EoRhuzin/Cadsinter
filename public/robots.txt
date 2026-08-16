@@ -1,4 +1,3 @@
 User-agent: *
 Allow: /
-
-Sitemap: https://cadsinter.gov.br/sitemap.xml
+Sitemap: https://eorhuzin.github.io/Cadsinter/sitemap.xml

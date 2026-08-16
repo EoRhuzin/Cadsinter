@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import { NDJsonRecord } from '../types';
 import { recordsToNDJsonContent, downloadFile } from '../utils/ndjson';
-import { Code, Copy, Check, Download, FileText, Eye, Globe } from 'lucide-react';
+import { Code, Copy, Check, FileText, Eye } from 'lucide-react';
+import { SendOptionsDropdown } from './SendOptionsDropdown';
 
 interface NDJsonPreviewProps {
   records: NDJsonRecord[];
   onOpenApi?: () => void;
+  onOpenZip?: () => void;
 }
 
-export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi }) => {
+export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi, onOpenZip }) => {
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(false);
 
@@ -101,31 +103,13 @@ export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi
             )}
           </button>
 
-          {onOpenApi && (
-            <button
-              type="button"
-              onClick={onOpenApi}
-              className="flex items-center space-x-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
-              title="Disparar dados por API REST"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              <span>Enviar por API</span>
-            </button>
-          )}
-
-          <button
-            type="button"
-            onClick={handleDownload}
-            disabled={records.length === 0}
-            className={`flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all ${
-              records.length > 0
-                ? 'bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer'
-                : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
-            }`}
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Baixar NDJSON</span>
-          </button>
+          <SendOptionsDropdown
+            count={records.length}
+            onDownload={handleDownload}
+            onOpenApi={onOpenApi}
+            onOpenZip={onOpenZip}
+            variant="primary"
+          />
 
         </div>
       </div>

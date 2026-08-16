@@ -1,5 +1,7 @@
 import React from 'react';
-import { FileJson, Download, Upload, Sparkles, Database, Trash2, Send, Globe, FileArchive, Coffee } from 'lucide-react';
+import { Upload, Sparkles, Database, Trash2, Coffee } from 'lucide-react';
+import { SendOptionsDropdown } from './SendOptionsDropdown';
+import cadsinterLogo from '../assets/images/cadsinter_logo_1786865365558.jpg';
 
 interface HeaderProps {
   count: number;
@@ -31,7 +33,7 @@ export const Header: React.FC<HeaderProps> = ({
           <div className="flex items-center space-x-3">
             <div className="w-11 h-11 rounded-2xl overflow-hidden border border-indigo-200 shadow-xs shrink-0 bg-indigo-50 p-0.5">
               <img
-                src="/cadsinter_logo.jpg"
+                src={cadsinterLogo}
                 alt="CadSinter Logo"
                 referrerPolicy="no-referrer"
                 className="w-full h-full object-cover rounded-xl"
@@ -104,47 +106,16 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Importar NDJSON</span>
             </button>
 
-            {/* 1. BAIXAR NDJSON */}
-            <button
-              type="button"
-              onClick={onDownload}
-              disabled={count === 0}
-              className={`flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold rounded-xl shadow-xs transition-all ${
-                count > 0
-                  ? 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 active:scale-98 cursor-pointer'
-                  : 'bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed'
-              }`}
-              title="Baixar os registros diretamente em arquivo texto .NDJSON"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span>BAIXAR NDJSON</span>
-            </button>
+            {/* Opções de Envio Dropdown */}
+            <SendOptionsDropdown
+              count={count}
+              onDownload={onDownload}
+              onOpenApi={onOpenApi}
+              onOpenZip={onOpenZip}
+              variant="primary"
+            />
 
-            {/* 2. ENVIAR POR API */}
-            {onOpenApi && (
-              <button
-                type="button"
-                onClick={onOpenApi}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white rounded-xl shadow-xs transition-all cursor-pointer ring-2 ring-emerald-500/20"
-                title="Abrir painel de envio e consultas via API REST (SINTER / CADURB)"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                <span>ENVIAR POR API</span>
-              </button>
-            )}
-
-            {/* 3. BAIXAR NDJSON ZIP */}
-            {onOpenZip && (
-              <button
-                type="button"
-                onClick={onOpenZip}
-                className="flex items-center space-x-1.5 px-3.5 py-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 active:scale-98 text-slate-950 rounded-xl shadow-xs transition-all cursor-pointer ring-2 ring-amber-400/30"
-                title="Gerar e baixar o arquivo .ZIP contendo o NDJSON compactado"
-              >
-                <FileArchive className="w-3.5 h-3.5 text-slate-950" />
-                <span>BAIXAR NDJSON ZIP</span>
-              </button>
-            )}
+            {/* ME DOE UM CAFÉ (DONATE) */}
 
             {/* 4. ME DOE UM CAFÉ (DONATE) */}
             {onOpenDonate && (

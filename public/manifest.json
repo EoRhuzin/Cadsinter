@@ -4,17 +4,17 @@
   "description": "Plataforma de Gestão Cadastral Municipal e Gerador NDJSON Oficial para SINTER / CADURB da Receita Federal",
   "icons": [
     {
-      "src": "/cadsinter_favicon.jpg",
+      "src": "cadsinter_favicon.jpg",
       "type": "image/jpeg",
       "sizes": "192x192"
     },
     {
-      "src": "/cadsinter_logo.jpg",
+      "src": "cadsinter_logo.jpg",
       "type": "image/jpeg",
       "sizes": "512x512"
     }
   ],
-  "start_url": "/",
+  "start_url": "./",
   "background_color": "#ffffff",
   "theme_color": "#4f46e5",
   "display": "standalone",
