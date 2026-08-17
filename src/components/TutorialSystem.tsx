@@ -1,7 +1,61 @@
 import React, { useState } from 'react';
-import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, X, GraduationCap, Building2, Home, Landmark, AlertCircle, HelpCircle, Layers, Check } from 'lucide-react';
+import { Sparkles, ArrowRight, ArrowLeft, CheckCircle2, X, GraduationCap, Building2, Home, Landmark, AlertCircle, HelpCircle, Layers, Check, Youtube, Play, Tv, ExternalLink, Video } from 'lucide-react';
 
 export type TutorialMode = 'type1' | 'type2' | 'type3' | 'overview';
+
+export interface VideoTutorialItem {
+  id: 'overview' | 'type1' | 'type2' | 'type3';
+  title: string;
+  badge: string;
+  badgeColor: string;
+  youtubeId: string;
+  embedUrl: string;
+  description: string;
+  highlights: string[];
+}
+
+export const YOUTUBE_TUTORIALS: VideoTutorialItem[] = [
+  {
+    id: 'overview',
+    title: 'Tour Geral: Visão Completa da Plataforma CadSinter',
+    badge: 'Geral',
+    badgeColor: 'bg-slate-700 text-slate-100 border-slate-600',
+    youtubeId: 'dwpmWI1CPQA',
+    embedUrl: 'https://www.youtube.com/embed/dwpmWI1CPQA?si=LXjnPOvCqY4b2KWh',
+    description: 'Aprenda a navegar pela interface, gerenciar a lista de imóveis, conferir regras do SINTER/CADURB e exportar em NDJSON de forma simples.',
+    highlights: ['Visão panorâmica da interface', 'Importação e exportação NDJSON', 'Validação e contadores de imóveis'],
+  },
+  {
+    id: 'type1',
+    title: 'Imóvel Tipo 1 (Territorial): Preencher e Gerar NDJSON',
+    badge: 'Tipo 1 - Territorial',
+    badgeColor: 'bg-emerald-600 text-emerald-100 border-emerald-500',
+    youtubeId: 'MjUgXit4nRA',
+    embedUrl: 'https://www.youtube.com/embed/MjUgXit4nRA?si=SUfyuTcQZyUUShWo',
+    description: 'Passo a passo prático para cadastrar lotes, terrenos vazios e glebas sem edificação averbada com todos os 8 campos obrigatórios.',
+    highlights: ['Lotes e terrenos vazios', '8 campos obrigatórios destacados', 'Validações para SINTER / CADURB'],
+  },
+  {
+    id: 'type2',
+    title: 'Imóvel Tipo 2 (Predial): Edificações e NDJSON',
+    badge: 'Tipo 2 - Predial',
+    badgeColor: 'bg-indigo-600 text-indigo-100 border-indigo-500',
+    youtubeId: 'BxUuDC58PYQ',
+    embedUrl: 'https://www.youtube.com/embed/BxUuDC58PYQ?si=pCQz_nsClaSeLkm8',
+    description: 'Como cadastrar edificações, casas, prédios, preenchendo área construída, ano da construção, padrão arquitetônico e destinação.',
+    highlights: ['Casas, apartamentos e galpões', 'Área construída e ano construtivo', 'Padrão arquitetônico e destinação'],
+  },
+  {
+    id: 'type3',
+    title: 'Imóvel Tipo 3 (Bem Especial): Cadastro de Bens Públicos',
+    badge: 'Tipo 3 - Bem Especial',
+    badgeColor: 'bg-amber-600 text-amber-100 border-amber-500',
+    youtubeId: 'USAW9mk_muM',
+    embedUrl: 'https://www.youtube.com/embed/USAW9mk_muM?si=QsHpyRqv7VTzjsnO',
+    description: 'Como cadastrar praças, parques, ruas e equipamentos públicos municipais com o código BICE obrigatório no SINTER.',
+    highlights: ['Bens de uso comum e especial', 'Seleção de Código BICE obrigatório', 'Formatos oficiais para prefeituras'],
+  },
+];
 
 export interface TutorialDetailItem {
   icon?: string;
@@ -505,10 +559,16 @@ export const TutorialWelcomeModal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
   onStartTour: (mode: TutorialMode) => void;
-}> = ({ isOpen, onClose, onStartTour }) => {
+  initialTab?: 'videos' | 'interactive';
+  initialVideoId?: 'overview' | 'type1' | 'type2' | 'type3';
+}> = ({ isOpen, onClose, onStartTour, initialTab = 'videos', initialVideoId = 'overview' }) => {
   const [dontShowAgain, setDontShowAgain] = useState(false);
+  const [activeTab, setActiveTab] = useState<'videos' | 'interactive'>(initialTab);
+  const [selectedVideoId, setSelectedVideoId] = useState<'overview' | 'type1' | 'type2' | 'type3'>(initialVideoId);
 
   if (!isOpen) return null;
+
+  const currentVideo = YOUTUBE_TUTORIALS.find((v) => v.id === selectedVideoId) || YOUTUBE_TUTORIALS[0];
 
   const handleSkip = () => {
     if (dontShowAgain) {
@@ -525,167 +585,296 @@ export const TutorialWelcomeModal: React.FC<{
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/75 backdrop-blur-xs animate-in fade-in-0 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-900/80 backdrop-blur-xs animate-in fade-in-0 duration-200 overflow-y-auto">
       
       {/* Dialog Box */}
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden relative animate-in zoom-in-95 duration-200">
+      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-3xl w-full overflow-hidden relative animate-in zoom-in-95 duration-200 my-auto">
         
         {/* Top Decorative Bar */}
-        <div className="bg-gradient-to-r from-emerald-500 via-indigo-600 to-amber-500 h-2.5 w-full" />
+        <div className="bg-gradient-to-r from-red-600 via-indigo-600 to-emerald-500 h-2.5 w-full" />
 
         {/* Close Button */}
         <button
           type="button"
           onClick={handleSkip}
-          className="absolute top-5 right-5 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors cursor-pointer"
+          className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-slate-100 hover:bg-slate-200 p-2 rounded-full transition-colors cursor-pointer z-10"
           title="Fechar"
         >
           <X className="w-4 h-4" />
         </button>
 
-        <div className="p-6 sm:p-8 space-y-5">
+        <div className="p-5 sm:p-7 space-y-5">
           
           {/* Header */}
-          <div className="space-y-1.5">
+          <div className="space-y-2 pr-8">
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 text-xs font-bold">
               <GraduationCap className="w-4 h-4 text-indigo-600" />
-              <span>Central de Treinamento & Tutoriais Interativos</span>
+              <span>Central de Treinamento & Tutoriais CadSinter</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-              Guia Passo a Passo CadSinter 🏛️
+              Aprenda a Usar a Plataforma CadSinter 🏛️
             </h2>
             <p className="text-xs text-slate-500 font-medium">
-              Escolha qual tutorial interativo você deseja realizar para aprender a preencher e validar imóveis:
+              Assista aos tutoriais em vídeo ou siga o guia interativo passo a passo na tela para cadastrar seus imóveis SINTER/CADURB.
             </p>
           </div>
 
-          {/* Grid of Tutorial Options */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-            
-            {/* Option 1: Tutorial Imóvel Tipo 1 */}
+          {/* Mode Tabs */}
+          <div className="flex items-center p-1 bg-slate-100 rounded-2xl border border-slate-200/80">
             <button
               type="button"
-              onClick={() => handleStart('type1')}
-              className="flex flex-col justify-between p-4 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 hover:to-emerald-100/50 text-slate-900 border-2 border-emerald-300 hover:border-emerald-500 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
+              onClick={() => setActiveTab('videos')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                activeTab === 'videos'
+                  ? 'bg-white text-rose-600 shadow-sm border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs">
-                    <Building2 className="w-5 h-5" />
-                  </div>
-                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-emerald-200">
-                    Tipo 1
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
-                    Imóvel Tipo 1: Territorial
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
-                    Lotes, terrenos vazios e glebas. Aprenda os 8 campos obrigatórios destacados em vermelho.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700 mt-3 pt-2 border-t border-emerald-100">
-                <span>Iniciar Tutorial Tipo 1</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <Youtube className="w-4 h-4 text-rose-600" />
+              <span>🎬 Vídeo Aulas no YouTube ({YOUTUBE_TUTORIALS.length})</span>
             </button>
-
-            {/* Option 2: Tutorial Imóvel Tipo 2 */}
             <button
               type="button"
-              onClick={() => handleStart('type2')}
-              className="flex flex-col justify-between p-4 bg-gradient-to-br from-indigo-50 via-white to-indigo-50/30 hover:to-indigo-100/50 text-slate-900 border-2 border-indigo-300 hover:border-indigo-500 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
+              onClick={() => setActiveTab('interactive')}
+              className={`flex-1 flex items-center justify-center space-x-2 py-2 px-3 rounded-xl text-xs font-extrabold transition-all cursor-pointer ${
+                activeTab === 'interactive'
+                  ? 'bg-white text-indigo-600 shadow-sm border border-slate-200'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-xs">
-                    <Home className="w-5 h-5" />
-                  </div>
-                  <span className="bg-indigo-100 text-indigo-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-indigo-200">
-                    Tipo 2
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
-                    Imóvel Tipo 2: Predial
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
-                    Casas, apartamentos e prédios. Área construída, ano de construção e padrão arquitetônico.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1 text-xs font-bold text-indigo-700 mt-3 pt-2 border-t border-indigo-100">
-                <span>Iniciar Tutorial Tipo 2</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
+              <Sparkles className="w-4 h-4 text-indigo-600" />
+              <span>🎓 Guias Interativos na Tela</span>
             </button>
-
-            {/* Option 3: Tutorial Imóvel Tipo 3 */}
-            <button
-              type="button"
-              onClick={() => handleStart('type3')}
-              className="flex flex-col justify-between p-4 bg-gradient-to-br from-amber-50 via-white to-amber-50/30 hover:to-amber-100/50 text-slate-900 border-2 border-amber-300 hover:border-amber-500 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 bg-amber-600 text-white rounded-xl shadow-xs">
-                    <Landmark className="w-5 h-5" />
-                  </div>
-                  <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-amber-200">
-                    Tipo 3
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 group-hover:text-amber-700 transition-colors">
-                    Imóvel Tipo 3: Bem Especial
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
-                    Praças, parques e infraestruturas públicas com código BICE obrigatório.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1 text-xs font-bold text-amber-700 mt-3 pt-2 border-t border-amber-100">
-                <span>Iniciar Tutorial Tipo 3</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
-
-            {/* Option 4: Tour Geral da Plataforma */}
-            <button
-              type="button"
-              onClick={() => handleStart('overview')}
-              className="flex flex-col justify-between p-4 bg-gradient-to-br from-slate-50 via-white to-slate-50 text-slate-900 border-2 border-slate-300 hover:border-slate-400 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 bg-slate-700 text-white rounded-xl shadow-xs">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <span className="bg-slate-200 text-slate-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                    Geral
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-sm font-black text-slate-900 group-hover:text-slate-700 transition-colors">
-                    Tour Geral da Plataforma
-                  </h3>
-                  <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
-                    Visão de cabeçalho, contadores, opções de exportação NDJSON e auditoria de erros.
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-1 text-xs font-bold text-slate-700 mt-3 pt-2 border-t border-slate-200">
-                <span>Iniciar Tour Geral</span>
-                <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
-
           </div>
 
+          {/* TAB 1: VIDEO TUTORIALS */}
+          {activeTab === 'videos' ? (
+            <div className="space-y-4">
+              
+              {/* Video Selector Tabs */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {YOUTUBE_TUTORIALS.map((video) => {
+                  const isSelected = video.id === selectedVideoId;
+                  return (
+                    <button
+                      key={video.id}
+                      type="button"
+                      onClick={() => setSelectedVideoId(video.id)}
+                      className={`flex flex-col items-center justify-center p-2.5 rounded-xl border text-center transition-all cursor-pointer text-xs font-bold ${
+                        isSelected
+                          ? 'bg-slate-900 text-white border-slate-900 shadow-md ring-2 ring-indigo-500/30'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      <span className="text-[10px] uppercase tracking-wider opacity-80 mb-0.5">
+                        {video.badge}
+                      </span>
+                      <span className="line-clamp-1 text-[11px] font-extrabold">
+                        {video.title.split(':')[0]}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* YouTube Iframe Player */}
+              <div className="space-y-3">
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden shadow-xl border border-slate-200 bg-slate-950">
+                  <iframe
+                    src={currentVideo.embedUrl}
+                    title={currentVideo.title}
+                    className="absolute inset-0 w-full h-full border-0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
+                    allowFullScreen
+                  />
+                </div>
+
+                {/* Video Info Box */}
+                <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <span className={`inline-block text-[10px] font-black px-2 py-0.5 rounded-md border text-white mb-1 ${currentVideo.badgeColor}`}>
+                        {currentVideo.badge}
+                      </span>
+                      <h3 className="text-sm font-black text-slate-900">
+                        {currentVideo.title}
+                      </h3>
+                    </div>
+                    <a
+                      href={`https://www.youtube.com/watch?v=${currentVideo.youtubeId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 rounded-lg border border-rose-200 transition-colors shrink-0"
+                      title="Abrir no aplicativo do YouTube"
+                    >
+                      <Youtube className="w-3.5 h-3.5" />
+                      <span>Abrir no YouTube</span>
+                      <ExternalLink className="w-3 h-3 ml-0.5" />
+                    </a>
+                  </div>
+
+                  <p className="text-xs text-slate-600 leading-relaxed font-medium">
+                    {currentVideo.description}
+                  </p>
+
+                  <div className="flex flex-wrap gap-1.5 pt-1">
+                    {currentVideo.highlights.map((h, i) => (
+                      <span key={i} className="inline-flex items-center space-x-1 text-[10px] font-bold bg-white text-slate-700 px-2 py-1 rounded-md border border-slate-200">
+                        <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
+                        <span>{h}</span>
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* Practice Action */}
+                  <div className="pt-2 flex items-center justify-between border-t border-slate-200/80">
+                    <span className="text-[11px] text-slate-500 font-medium">
+                      Quer testar na prática enquanto digita?
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleStart(currentVideo.id)}
+                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-black text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+                      <span>Praticar este Tutorial na Tela</span>
+                      <ArrowRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          ) : (
+            /* TAB 2: INTERACTIVE STEP-BY-STEP GUIDES */
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+              
+              {/* Option 1: Tutorial Imóvel Tipo 1 */}
+              <button
+                type="button"
+                onClick={() => handleStart('type1')}
+                className="flex flex-col justify-between p-4 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/30 hover:to-emerald-100/50 text-slate-900 border-2 border-emerald-300 hover:border-emerald-500 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 bg-emerald-600 text-white rounded-xl shadow-xs">
+                      <Building2 className="w-5 h-5" />
+                    </div>
+                    <span className="bg-emerald-100 text-emerald-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-emerald-200">
+                      Tipo 1
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 group-hover:text-emerald-700 transition-colors">
+                      Imóvel Tipo 1: Territorial
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
+                      Lotes, terrenos vazios e glebas. Aprenda os 8 campos obrigatórios destacados em vermelho.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1 text-xs font-bold text-emerald-700 mt-3 pt-2 border-t border-emerald-100">
+                  <span>Iniciar Guia Tipo 1</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
+              {/* Option 2: Tutorial Imóvel Tipo 2 */}
+              <button
+                type="button"
+                onClick={() => handleStart('type2')}
+                className="flex flex-col justify-between p-4 bg-gradient-to-br from-indigo-50 via-white to-indigo-50/30 hover:to-indigo-100/50 text-slate-900 border-2 border-indigo-300 hover:border-indigo-500 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 bg-indigo-600 text-white rounded-xl shadow-xs">
+                      <Home className="w-5 h-5" />
+                    </div>
+                    <span className="bg-indigo-100 text-indigo-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-indigo-200">
+                      Tipo 2
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 group-hover:text-indigo-700 transition-colors">
+                      Imóvel Tipo 2: Predial
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
+                      Casas, apartamentos e prédios. Área construída, ano de construção e padrão arquitetônico.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1 text-xs font-bold text-indigo-700 mt-3 pt-2 border-t border-indigo-100">
+                  <span>Iniciar Guia Tipo 2</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
+              {/* Option 3: Tutorial Imóvel Tipo 3 */}
+              <button
+                type="button"
+                onClick={() => handleStart('type3')}
+                className="flex flex-col justify-between p-4 bg-gradient-to-br from-amber-50 via-white to-amber-50/30 hover:to-amber-100/50 text-slate-900 border-2 border-amber-300 hover:border-amber-500 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 bg-amber-600 text-white rounded-xl shadow-xs">
+                      <Landmark className="w-5 h-5" />
+                    </div>
+                    <span className="bg-amber-100 text-amber-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase border border-amber-200">
+                      Tipo 3
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 group-hover:text-amber-700 transition-colors">
+                      Imóvel Tipo 3: Bem Especial
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
+                      Praças, parques e infraestruturas públicas com código BICE obrigatório.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1 text-xs font-bold text-amber-700 mt-3 pt-2 border-t border-amber-100">
+                  <span>Iniciar Guia Tipo 3</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
+              {/* Option 4: Tour Geral da Plataforma */}
+              <button
+                type="button"
+                onClick={() => handleStart('overview')}
+                className="flex flex-col justify-between p-4 bg-gradient-to-br from-slate-50 via-white to-slate-50 text-slate-900 border-2 border-slate-300 hover:border-slate-400 rounded-2xl shadow-xs hover:shadow-md transition-all cursor-pointer group text-left active:scale-98"
+              >
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="p-2.5 bg-slate-700 text-white rounded-xl shadow-xs">
+                      <Layers className="w-5 h-5" />
+                    </div>
+                    <span className="bg-slate-200 text-slate-800 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
+                      Geral
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-900 group-hover:text-slate-700 transition-colors">
+                      Tour Geral da Plataforma
+                    </h3>
+                    <p className="text-[11px] text-slate-500 font-normal leading-snug mt-1">
+                      Visão de cabeçalho, contadores, opções de exportação NDJSON e auditoria de erros.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-1 text-xs font-bold text-slate-700 mt-3 pt-2 border-t border-slate-200">
+                  <span>Iniciar Tour Geral</span>
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </button>
+
+            </div>
+          )}
+
           {/* Option: Skip Tutorial */}
-          <div className="pt-1 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3 border-t border-slate-100">
             <label htmlFor="cadsinter_dont_show" className="flex items-center space-x-2 text-xs text-slate-500 cursor-pointer select-none">
               <input
                 type="checkbox"
@@ -710,6 +899,28 @@ export const TutorialWelcomeModal: React.FC<{
       </div>
 
     </div>
+  );
+};
+
+export const VideoTutorialModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  initialVideoId?: 'overview' | 'type1' | 'type2' | 'type3';
+  onStartTour?: (mode: TutorialMode) => void;
+}> = ({ isOpen, onClose, initialVideoId = 'overview', onStartTour }) => {
+  if (!isOpen) return null;
+
+  return (
+    <TutorialWelcomeModal
+      isOpen={isOpen}
+      onClose={onClose}
+      onStartTour={(mode) => {
+        if (onStartTour) onStartTour(mode);
+        onClose();
+      }}
+      initialTab="videos"
+      initialVideoId={initialVideoId}
+    />
   );
 };
 

@@ -104,17 +104,17 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Tutorial Guia Interativo */}
+            {/* Tutorial Guia Interativo & Vídeos */}
             {onOpenTutorial && (
               <button
                 id="tutorial-guide-btn"
                 type="button"
                 onClick={onOpenTutorial}
-                className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 rounded-xl transition-all shadow-2xs cursor-pointer active:scale-98"
-                title="Abrir central de tutoriais interativos passo a passo"
+                className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold bg-indigo-50 hover:bg-indigo-100 text-indigo-900 border border-indigo-200 rounded-xl transition-all shadow-2xs cursor-pointer active:scale-98"
+                title="Abrir tutoriais em vídeo no YouTube e guias interativos passo a passo"
               >
                 <GraduationCap className="w-4 h-4 text-indigo-600" />
-                <span>Tutoriais</span>
+                <span>Vídeos & Tutoriais 🎬</span>
               </button>
             )}
 
