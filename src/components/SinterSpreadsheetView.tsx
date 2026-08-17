@@ -120,8 +120,8 @@ function extractCIB(item: any, matchLocal?: NDJsonRecord): { valor: string; situ
     return { valor: null, situacao: null };
   };
 
-  // 1. Direct item.cib
-  const cib1 = parseCibValue(item.cib);
+  // 1. Direct item.cib, item.Cib or item.CIB
+  const cib1 = parseCibValue(item.cib || item.Cib || item.CIB);
   if (cib1.valor) {
     return { valor: cib1.valor, situacao: cib1.situacao || cleanStr(item.situacao) || 'Ativa' };
   }
@@ -129,7 +129,7 @@ function extractCIB(item: any, matchLocal?: NDJsonRecord): { valor: string; situ
   // 2. Check item.DadosGeraisImovel or item.dadosGerais for idParcela or cib
   const dg = item.DadosGeraisImovel || item.dadosGerais || item.ui?.DadosGeraisImovel || item.resultado?.DadosGeraisImovel || item.resultado?.ui?.DadosGeraisImovel;
   if (dg) {
-    const cibDg = parseCibValue(dg.idParcela || dg.cib || dg.cibValor);
+    const cibDg = parseCibValue(dg.idParcela || dg.cib || dg.Cib || dg.CIB || dg.cibValor);
     if (cibDg.valor) {
       return { valor: cibDg.valor, situacao: cibDg.situacao || cleanStr(item.situacao) || 'Ativa' };
     }
@@ -138,7 +138,7 @@ function extractCIB(item: any, matchLocal?: NDJsonRecord): { valor: string; situ
   // 3. Check item.ui or item.uiIncluida or item.resultado
   const subObj = item.ui || item.uiIncluida || item.resultado?.ui || item.resultado;
   if (subObj) {
-    const cibSub = parseCibValue(subObj.cib || subObj.idParcela);
+    const cibSub = parseCibValue(subObj.cib || subObj.Cib || subObj.CIB || subObj.idParcela);
     if (cibSub.valor) {
       return { valor: cibSub.valor, situacao: cibSub.situacao || cleanStr(subObj.situacao) || cleanStr(item.situacao) || 'Ativa' };
     }

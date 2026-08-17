@@ -171,7 +171,7 @@ export const RecordList: React.FC<RecordListProps> = ({
       </div>
 
       {/* Table View */}
-      <div className="overflow-x-auto">
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -714,6 +714,478 @@ export const RecordList: React.FC<RecordListProps> = ({
             })}
           </tbody>
         </table>
+      </div>
+
+      {/* Mobile Card View (shown only on mobile/tablet) */}
+      <div className="block md:hidden divide-y divide-slate-100 bg-white">
+        {filteredRecords.map((rec) => {
+          const originalIndex = records.findIndex((r) => r.id === rec.id);
+          const valResult = validateNDJsonRecord(rec);
+          const tipoNum = Number(rec.dadosGerais.tipoImovel);
+          const isTipo1 = tipoNum === 1;
+          const isTipo2 = tipoNum === 2;
+          const isTipo3 = tipoNum === 3;
+
+          // Check if record is from Batch (Lote)
+          const isBatch = !!rec.isBatch;
+          const alteredOpts = rec.alteredOptions || ['complNroImovel'];
+
+          return (
+            <div
+              key={rec.id}
+              className={`p-4 space-y-3 hover:bg-slate-50/60 transition-colors ${
+                !valResult.isValid ? 'bg-rose-50/30' : isBatch ? 'bg-indigo-50/10' : ''
+              }`}
+            >
+              {/* Header: Index, Inscrição & Badges */}
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                <div className="flex items-center space-x-2">
+                  <span className="font-mono text-xs font-bold text-slate-400">
+                    #{originalIndex + 1}
+                  </span>
+                  {onUpdateRecordField ? (
+                    <input
+                      type="text"
+                      maxLength={45}
+                      value={rec.dadosGerais.inscricaoImobiliaria}
+                      onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.inscricaoImobiliaria', e.target.value)}
+                      placeholder="Inscrição"
+                      className="w-28 bg-white border border-slate-200 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/20 rounded-lg px-2 py-0.5 font-mono text-xs font-bold text-indigo-700 shadow-2xs"
+                    />
+                  ) : (
+                    <span className="font-mono font-bold text-indigo-600 text-xs">
+                      #{rec.dadosGerais.inscricaoImobiliaria}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  {isBatch ? (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                      <Layers className="w-2.5 h-2.5 text-indigo-600" />
+                      <span>Lote</span>
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <Tag className="w-2.5 h-2.5 text-emerald-600" />
+                      <span>Individual</span>
+                    </span>
+                  )}
+
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                    Op: {rec.operacao || 'I'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Body Content */}
+              <div className="text-xs text-slate-700 space-y-2">
+                {isBatch ? (
+                  /* Batch fields view with inline inputs on mobile */
+                  <div className="grid grid-cols-1 gap-2 bg-slate-50/50 p-2.5 rounded-xl border border-slate-100">
+                    {alteredOpts.includes('complNroImovel') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Compl. Nº:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="text"
+                            value={rec.endereco.complNroImovel || ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.complNroImovel', e.target.value)}
+                            className="w-36 bg-white border border-indigo-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-indigo-950"
+                          />
+                        ) : (
+                          <span className="font-bold text-indigo-800">{rec.endereco.complNroImovel || '(Vazio)'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('numeroImovel') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Nº:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="text"
+                            value={rec.endereco.numeroImovel || ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.numeroImovel', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="font-bold text-slate-800">{rec.endereco.numeroImovel || 'S/N'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('bairro') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Bairro:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="text"
+                            value={rec.endereco.bairro || ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.bairro', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="text-slate-800">{rec.endereco.bairro || '(Vazio)'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('nomeLogradouro') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Logradouro:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="text"
+                            value={rec.endereco.nomeLogradouro || ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.nomeLogradouro', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="text-slate-800">{rec.endereco.nomeLogradouro || '(Vazio)'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('tipoLogradouro') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Tipo Logr:</span>
+                        {onUpdateRecordField ? (
+                          <select
+                            value={rec.endereco.tipoLogradouro}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.tipoLogradouro', Number(e.target.value))}
+                            className="bg-white border border-slate-200 focus:border-indigo-500 rounded px-1 py-0.5 text-xs font-bold text-slate-800"
+                          >
+                            {TIPO_LOGRADOURO_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="font-bold text-slate-800">{rec.endereco.tipoLogradouro}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('complEndereco') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Compl. End:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="text"
+                            value={rec.endereco.complEndereco || ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.complEndereco', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="text-slate-800">{rec.endereco.complEndereco || '(Vazio)'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('cep') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">CEP:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="text"
+                            maxLength={8}
+                            value={rec.endereco.cep || ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'endereco.cep', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-mono text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="font-mono text-slate-800">{formatCepDisplay(rec.endereco.cep)}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('tipoImovel') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Tipo:</span>
+                        {onUpdateRecordField ? (
+                          <select
+                            value={rec.dadosGerais.tipoImovel}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.tipoImovel', Number(e.target.value))}
+                            className="bg-white border border-indigo-500 rounded px-1.5 py-0.5 text-xs font-bold text-slate-800"
+                          >
+                            <option value={1}>1 - Territorial</option>
+                            <option value={2}>2 - Predial</option>
+                            <option value={3}>3 - BICE</option>
+                          </select>
+                        ) : (
+                          <span className="font-bold text-slate-800">Tipo {rec.dadosGerais.tipoImovel}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('areaConstruida') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Área Cst:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="number"
+                            step="any"
+                            value={rec.dadosGerais.areaConstruida !== undefined ? rec.dadosGerais.areaConstruida : ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.areaConstruida', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="font-bold text-slate-800">{rec.dadosGerais.areaConstruida || 0} m²</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('areaTerreno') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Área Ter:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="number"
+                            step="any"
+                            value={rec.dadosGerais.areaTerreno !== undefined ? rec.dadosGerais.areaTerreno : ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.areaTerreno', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="font-bold text-slate-800">{rec.dadosGerais.areaTerreno || 0} m²</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('valorVenal') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Valor Venal:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="number"
+                            step="any"
+                            value={rec.dadosGerais.valorVenal !== undefined ? rec.dadosGerais.valorVenal : ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.valorVenal', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="font-bold text-slate-800">R$ {rec.dadosGerais.valorVenal || 0}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('anoConstrutivo') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Ano Constr:</span>
+                        {onUpdateRecordField ? (
+                          <input
+                            type="number"
+                            value={rec.dadosGerais.anoConstrutivo !== undefined ? rec.dadosGerais.anoConstrutivo : ''}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.anoConstrutivo', e.target.value)}
+                            className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-mono text-xs text-slate-800"
+                          />
+                        ) : (
+                          <span className="font-mono text-slate-800">{rec.dadosGerais.anoConstrutivo || 'N/A'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('tpArquitetonico') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-600">Arq:</span>
+                        {onUpdateRecordField ? (
+                          <select
+                            value={rec.dadosGerais.tpArquitetonico}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'dadosGerais.tpArquitetonico', Number(e.target.value))}
+                            className="bg-white border border-slate-200 focus:border-indigo-500 rounded px-1 py-0.5 text-xs font-bold text-slate-800"
+                          >
+                            {TP_ARQUITETONICO_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="font-bold text-slate-800">Arq {rec.dadosGerais.tpArquitetonico}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('operacao') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-amber-900">Op:</span>
+                        {onUpdateRecordField ? (
+                          <select
+                            value={rec.operacao || 'I'}
+                            onChange={(e) => onUpdateRecordField(rec.id, 'operacao', e.target.value)}
+                            className="bg-white border border-amber-200 focus:border-amber-500 rounded px-1 py-0.5 text-xs font-bold text-amber-900"
+                          >
+                            <option value="I">I (Inclusão)</option>
+                            <option value="A">A (Alteração)</option>
+                            <option value="E">E (Exclusão)</option>
+                          </select>
+                        ) : (
+                          <span className="font-bold text-amber-900">{rec.operacao || 'I'}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {alteredOpts.includes('titulares') && (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-indigo-900">Titulares:</span>
+                        <div className="flex items-center gap-1.5">
+                          <Users className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                          <span className="font-bold text-indigo-800">{rec.titulares?.length || 0} Titular(es)</span>
+                          <button
+                            type="button"
+                            onClick={() => onEditRecord(rec)}
+                            className="text-[10px] font-bold text-indigo-600 underline cursor-pointer"
+                          >
+                            Editar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  /* Individual field summary */
+                  <div className="space-y-2 bg-slate-50/40 p-2.5 rounded-xl border border-slate-100">
+                    <div className="flex items-start gap-1.5">
+                      <MapPin className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                      <div>
+                        <div className="font-bold text-slate-900">{rec.endereco.nomeLogradouro || 'Sem Logr.'}, Nº {rec.endereco.numeroImovel || 'S/N'}</div>
+                        <div className="text-slate-500 text-[11px]">
+                          Bairro: {rec.endereco.bairro || '(Vazio)'} | CEP: {formatCepDisplay(rec.endereco.cep)}
+                        </div>
+                        {rec.endereco.complNroImovel && (
+                          <span className="inline-block mt-1 px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold text-[9px] border border-indigo-100/60">
+                            Compl: {rec.endereco.complNroImovel}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-1 pt-1 border-t border-slate-100 text-[11px]">
+                      <div><strong>Terreno:</strong> {rec.dadosGerais.areaTerreno || 0}m²</div>
+                      <div><strong>Construída:</strong> {rec.dadosGerais.areaConstruida || 0}m²</div>
+                      <div><strong>Ano Constr:</strong> {rec.dadosGerais.anoConstrutivo || 'N/A'}</div>
+                      <div><strong>Tipo / Arq:</strong> {rec.dadosGerais.tipoImovel} / {rec.dadosGerais.tpArquitetonico}</div>
+                    </div>
+
+                    {rec.dadosGerais.valorVenal ? (
+                      <div className="text-[11px] font-bold text-emerald-700">
+                        Venal: R$ {Number(rec.dadosGerais.valorVenal).toLocaleString('pt-BR')}
+                      </div>
+                    ) : null}
+
+                    {/* Tags of Modules */}
+                    <div className="flex flex-wrap gap-1 pt-1">
+                      {isTipo1 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                          Territorial (1)
+                        </span>
+                      ) : isTipo2 ? (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                          Predial (2)
+                        </span>
+                      ) : (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-purple-100 text-purple-800 border border-purple-200">
+                          BICE (3)
+                        </span>
+                      )}
+
+                      {rec.titulares && rec.titulares.length > 0 && (
+                        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-150 flex items-center gap-1">
+                          <Users className="w-2.5 h-2.5" />
+                          <span>{rec.titulares.length} Titular(es)</span>
+                        </span>
+                      )}
+
+                      {rec.servicoRegistroImovel && Object.values(rec.servicoRegistroImovel).some((v) => v) && (
+                        <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-sky-50 text-sky-700 border border-sky-150">
+                          RI
+                        </span>
+                      )}
+
+                      {rec.cartorioNotas && Object.values(rec.cartorioNotas).some((v) => v) && (
+                        <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-150">
+                          Notas
+                        </span>
+                      )}
+
+                      {rec.itbi && Object.values(rec.itbi).some((v) => v) && (
+                        <span className="px-1 py-0.5 rounded text-[9px] font-bold bg-amber-50 text-amber-800 border border-amber-150">
+                          ITBI
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions & Order buttons */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                {/* Reordering */}
+                <div className="flex items-center space-x-1">
+                  <button
+                    type="button"
+                    onClick={() => onMoveRecord(originalIndex, 'up')}
+                    disabled={originalIndex === 0}
+                    className="p-1.5 bg-slate-100 text-slate-500 hover:text-indigo-600 disabled:opacity-30 rounded-lg cursor-pointer flex items-center gap-0.5 text-[10px] font-semibold"
+                    title="Mover para cima"
+                  >
+                    <ArrowUp className="w-3.5 h-3.5" />
+                    <span>Subir</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onMoveRecord(originalIndex, 'down')}
+                    disabled={originalIndex === records.length - 1}
+                    className="p-1.5 bg-slate-100 text-slate-500 hover:text-indigo-600 disabled:opacity-30 rounded-lg cursor-pointer flex items-center gap-0.5 text-[10px] font-semibold"
+                    title="Mover para baixo"
+                  >
+                    <ArrowDown className="w-3.5 h-3.5" />
+                    <span>Descer</span>
+                  </button>
+                </div>
+
+                {/* Main Actions */}
+                <div className="flex items-center space-x-1">
+                  {/* Duplicate */}
+                  <button
+                    type="button"
+                    onClick={() => onDuplicateRecord(rec)}
+                    className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-bold border border-slate-200"
+                    title="Duplicar"
+                  >
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Duplicar</span>
+                  </button>
+
+                  {/* Edit */}
+                  <button
+                    type="button"
+                    onClick={() => onEditRecord(rec)}
+                    className="p-1.5 text-slate-500 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-bold border border-slate-200"
+                    title="Editar"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    <span>Editar</span>
+                  </button>
+
+                  {/* Delete */}
+                  <button
+                    type="button"
+                    onClick={() => onDeleteRecord(rec.id)}
+                    className="p-1.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer flex items-center gap-1 text-[10px] font-bold border border-rose-200"
+                    title="Remover"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Remover</span>
+                  </button>
+                </div>
+              </div>
+
+            </div>
+          );
+        })}
       </div>
 
     </div>
