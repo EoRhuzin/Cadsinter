@@ -168,6 +168,12 @@ export default function App() {
           }
         } else if (path === 'operacao') {
           updated.operacao = value;
+        } else if (path === 'statusCor') {
+          updated.statusCor = value === 'nenhum' ? undefined : value;
+        } else if (path === 'statusNota') {
+          updated.statusNota = value;
+        } else {
+          (updated as any)[path] = value;
         }
 
         return updated;
@@ -233,19 +239,75 @@ export default function App() {
   };
 
   // Handler: Import records
-  const handleImportRecords = (imported: NDJsonRecord[], replace: boolean) => {
-    if (replace) {
+  const handleImportRecords = (
+    imported: NDJsonRecord[],
+    mode: 'replace' | 'upsert' | 'append' = 'replace'
+  ) => {
+    if (mode === 'replace') {
       setRecords(imported);
+    } else if (mode === 'upsert') {
+      setRecords((prev) => {
+        const result = [...prev];
+        imported.forEach((newRec) => {
+          const newInsc = String(newRec.dadosGerais?.inscricaoImobiliaria || '').trim();
+          if (!newInsc) {
+            result.push(newRec);
+            return;
+          }
+          const existingIdx = result.findIndex(
+            (r) => String(r.dadosGerais?.inscricaoImobiliaria || '').trim() === newInsc
+          );
+          if (existingIdx !== -1) {
+            result[existingIdx] = {
+              ...newRec,
+              id: result[existingIdx].id,
+            };
+          } else {
+            result.push(newRec);
+          }
+        });
+        return result;
+      });
     } else {
       setRecords((prev) => [...prev, ...imported]);
     }
   };
 
-  // Handler: Download NDJSON file
+  // Handler: Download NDJSON file (Controle Interno default for quick export)
   const handleDownload = () => {
     if (records.length === 0) return;
-    const content = recordsToNDJsonContent(records);
-    downloadFile(content, 'imoveis_cadastrados.ndjson');
+    const content = recordsToNDJsonContent(records, { includeInternalStatus: true });
+    downloadFile(content, 'imoveis_controle_interno.ndjson');
+  };
+
+  // Handler: Download NDJSON Controle Interno (with colors/notes metadata)
+  const handleDownloadInternal = () => {
+    if (records.length === 0) return;
+    const content = recordsToNDJsonContent(records, { includeInternalStatus: true });
+    downloadFile(content, 'imoveis_controle_interno.ndjson');
+  };
+
+  // Handler: Download NDJSON Oficial SINTER (strict SINTER standard)
+  const handleDownloadSinter = () => {
+    if (records.length === 0) return;
+    const content = recordsToNDJsonContent(records, { forSinter: true });
+    downloadFile(content, 'imoveis_sinter_oficial.ndjson');
+  };
+
+  // Handler: Batch change status color
+  const handleBatchSetStatusColor = (ids: string[], color: string) => {
+    setRecords((prev) =>
+      prev.map((r) =>
+        ids.includes(r.id)
+          ? { ...r, statusCor: color === 'nenhum' ? undefined : color }
+          : r
+      )
+    );
+  };
+
+  // Handler: Batch delete records
+  const handleBatchDelete = (ids: string[]) => {
+    setRecords((prev) => prev.filter((r) => !ids.includes(r.id)));
   };
 
   return (
@@ -255,6 +317,8 @@ export default function App() {
       <Header
         count={records.length}
         onDownload={handleDownload}
+        onDownloadInternal={handleDownloadInternal}
+        onDownloadSinter={handleDownloadSinter}
         onOpenImport={() => setIsImportModalOpen(true)}
         onLoadSamples={handleLoadSamples}
         onClearAll={handleClearAll}
@@ -328,6 +392,8 @@ export default function App() {
             <SendOptionsDropdown
               count={records.length}
               onDownload={handleDownload}
+              onDownloadInternal={handleDownloadInternal}
+              onDownloadSinter={handleDownloadSinter}
               onOpenApi={() => setIsApiModalOpen(true)}
               onOpenZip={() => setIsZipModalOpen(true)}
               variant="primary"
@@ -364,8 +430,12 @@ export default function App() {
               onLoadSamples={handleLoadSamples}
               onClearAll={handleClearAll}
               onDownload={handleDownload}
+              onDownloadInternal={handleDownloadInternal}
+              onDownloadSinter={handleDownloadSinter}
               onOpenApi={() => setIsApiModalOpen(true)}
               onOpenZip={() => setIsZipModalOpen(true)}
+              onBatchSetStatusColor={handleBatchSetStatusColor}
+              onBatchDelete={handleBatchDelete}
             />
 
           </div>
@@ -421,6 +491,7 @@ export default function App() {
       <ImportModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
+        currentCount={records.length}
         onImportRecords={handleImportRecords}
       />
 

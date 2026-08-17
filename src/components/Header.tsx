@@ -5,7 +5,9 @@ import cadsinterLogo from '../assets/images/cadsinter_logo_1786865365558.jpg';
 
 interface HeaderProps {
   count: number;
-  onDownload: () => void;
+  onDownload?: () => void;
+  onDownloadInternal?: () => void;
+  onDownloadSinter?: () => void;
   onOpenImport: () => void;
   onLoadSamples: () => void;
   onClearAll: () => void;
@@ -18,6 +20,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   count,
   onDownload,
+  onDownloadInternal,
+  onDownloadSinter,
   onOpenImport,
   onLoadSamples,
   onClearAll,
@@ -130,6 +134,8 @@ export const Header: React.FC<HeaderProps> = ({
               <SendOptionsDropdown
                 count={count}
                 onDownload={onDownload}
+                onDownloadInternal={onDownloadInternal}
+                onDownloadSinter={onDownloadSinter}
                 onOpenApi={onOpenApi}
                 onOpenZip={onOpenZip}
                 variant="primary"

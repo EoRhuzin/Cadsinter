@@ -39,6 +39,8 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
   const [cartorioNotas, setCartorioNotas] = useState<CartorioNotas>({});
   const [itbi, setItbi] = useState<ITBI>({});
   const [operacao, setOperacao] = useState<string>('I');
+  const [statusCor, setStatusCor] = useState<string | undefined>(undefined);
+  const [statusNota, setStatusNota] = useState<string | undefined>(undefined);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState<boolean>(false);
 
   useEffect(() => {
@@ -51,6 +53,8 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
       setCartorioNotas(record.cartorioNotas ? { ...record.cartorioNotas } : {});
       setItbi(record.itbi ? JSON.parse(JSON.stringify(record.itbi)) : {});
       setOperacao(record.operacao || 'I');
+      setStatusCor(record.statusCor);
+      setStatusNota(record.statusNota);
       setHasAttemptedSubmit(false);
     }
   }, [record]);
@@ -99,6 +103,10 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
 
     onSave({
       id: record.id,
+      statusCor: statusCor === 'nenhum' ? undefined : statusCor,
+      statusNota,
+      isBatch: record.isBatch,
+      alteredOptions: record.alteredOptions,
       dadosGerais: {
         ...dadosGerais,
         areaTerreno: cleanAreaTerreno,
@@ -161,13 +169,56 @@ export const EditRecordModal: React.FC<EditRecordModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center space-x-3">
+            {/* Status Color Picker in modal */}
+            <div className="flex items-center bg-white border border-slate-200 px-2 py-1 rounded-xl shadow-2xs space-x-1.5">
+              <span className="text-[11px] font-bold text-slate-500 mr-0.5">Status:</span>
+              <button
+                type="button"
+                onClick={() => setStatusCor(statusCor === 'verde' ? undefined : 'verde')}
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all cursor-pointer ${
+                  statusCor === 'verde'
+                    ? 'bg-emerald-500 text-white ring-2 ring-emerald-300 scale-110'
+                    : 'bg-emerald-100/70 hover:bg-emerald-200 text-emerald-800 opacity-60 hover:opacity-100'
+                }`}
+                title="Verde (OK / Aprovado)"
+              >
+                🟢
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusCor(statusCor === 'amarelo' ? undefined : 'amarelo')}
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all cursor-pointer ${
+                  statusCor === 'amarelo'
+                    ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 scale-110'
+                    : 'bg-amber-100/70 hover:bg-amber-200 text-amber-900 opacity-60 hover:opacity-100'
+                }`}
+                title="Amarelo (Atenção / Pendente)"
+              >
+                🟡
+              </button>
+              <button
+                type="button"
+                onClick={() => setStatusCor(statusCor === 'vermelho' ? undefined : 'vermelho')}
+                className={`w-6 h-6 rounded-full flex items-center justify-center text-xs transition-all cursor-pointer ${
+                  statusCor === 'vermelho'
+                    ? 'bg-rose-500 text-white ring-2 ring-rose-300 scale-110'
+                    : 'bg-rose-100/70 hover:bg-rose-200 text-rose-800 opacity-60 hover:opacity-100'
+                }`}
+                title="Vermelho (Erro / Incorreto)"
+              >
+                🔴
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition-all cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Validation Errors alert */}

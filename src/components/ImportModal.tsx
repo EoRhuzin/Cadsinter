@@ -1,21 +1,23 @@
 import React, { useState } from 'react';
-import { Upload, X, AlertCircle, CheckCircle2, FileCode } from 'lucide-react';
+import { Upload, X, AlertCircle, CheckCircle2, FileCode, RefreshCw, Layers, Plus } from 'lucide-react';
 import { parseNDJsonContent } from '../utils/ndjson';
 import { NDJsonRecord } from '../types';
 
 interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImportRecords: (imported: NDJsonRecord[], replace: boolean) => void;
+  currentCount?: number;
+  onImportRecords: (imported: NDJsonRecord[], mode: 'replace' | 'upsert' | 'append') => void;
 }
 
 export const ImportModal: React.FC<ImportModalProps> = ({
   isOpen,
   onClose,
+  currentCount = 0,
   onImportRecords,
 }) => {
   const [pasteContent, setPasteContent] = useState('');
-  const [importMode, setImportMode] = useState<'append' | 'replace'>('append');
+  const [importMode, setImportMode] = useState<'replace' | 'upsert' | 'append'>('replace');
   const [parseResult, setParseResult] = useState<{
     records: NDJsonRecord[];
     errors: string[];
@@ -51,7 +53,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 
   const handleConfirmImport = () => {
     if (parseResult && parseResult.records.length > 0) {
-      onImportRecords(parseResult.records, importMode === 'replace');
+      onImportRecords(parseResult.records, importMode);
       setPasteContent('');
       setParseResult(null);
       onClose();
@@ -68,9 +70,14 @@ export const ImportModal: React.FC<ImportModalProps> = ({
             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl border border-indigo-100">
               <Upload className="w-5 h-5" />
             </div>
-            <h3 className="text-base font-bold text-slate-900">
-              Importar ou Carregar Arquivo NDJSON
-            </h3>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">
+                Importar ou Carregar Arquivo NDJSON
+              </h3>
+              <p className="text-xs text-slate-500">
+                Carregue arquivos gerados anteriormente ou exportados do SINTER / CADURB
+              </p>
+            </div>
           </div>
           <button
             type="button"
@@ -101,7 +108,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
                 Arraste seu arquivo NDJSON aqui ou <span className="text-indigo-600 font-semibold underline">Clique para navegar</span>
               </p>
               <p className="text-[11px] text-slate-400 mt-1">
-                Suporta arquivos NDJSON com uma linha por objeto
+                Suporta arquivos NDJSON com uma linha JSON por objeto
               </p>
             </div>
           </div>
@@ -112,7 +119,7 @@ export const ImportModal: React.FC<ImportModalProps> = ({
               2. Ou Cole o Conteúdo NDJSON diretamente abaixo
             </label>
             <textarea
-              rows={5}
+              rows={4}
               placeholder={`Cole aqui suas linhas NDJSON, ex:\n{"ui":{"DadosGeraisImovel":{"inscricaoImobiliaria":"11"...},"EnderecoImovel":{...}},"operacao":"I"}`}
               value={pasteContent}
               onChange={(e) => handleTextChange(e.target.value)}
@@ -124,11 +131,46 @@ export const ImportModal: React.FC<ImportModalProps> = ({
           {parseResult && (
             <div className="space-y-3">
               {parseResult.records.length > 0 && (
-                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center space-x-2 text-xs text-emerald-800 font-medium">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>
-                    Foram identificados <strong>{parseResult.records.length}</strong> registro(s) válido(s) para importação.
-                  </span>
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-2 text-xs text-emerald-800 font-medium">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>
+                      Foram identificados <strong>{parseResult.records.length}</strong> registro(s) válido(s) no arquivo.
+                    </span>
+                  </div>
+                  {/* Status colors breakdown */}
+                  {(() => {
+                    const greenCount = parseResult.records.filter((r) => r.statusCor === 'verde').length;
+                    const yellowCount = parseResult.records.filter((r) => r.statusCor === 'amarelo').length;
+                    const redCount = parseResult.records.filter((r) => r.statusCor === 'vermelho').length;
+                    const hasAnyColor = greenCount > 0 || yellowCount > 0 || redCount > 0;
+
+                    if (!hasAnyColor) return null;
+
+                    return (
+                      <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-emerald-200/60 text-[11px]">
+                        <span className="text-slate-600 font-semibold">Status de cores identificados:</span>
+                        {greenCount > 0 && (
+                          <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold rounded-md border border-emerald-300 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span>{greenCount} OK (Verde)</span>
+                          </span>
+                        )}
+                        {yellowCount > 0 && (
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-800 font-bold rounded-md border border-amber-300 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                            <span>{yellowCount} Atenção (Amarelo)</span>
+                          </span>
+                        )}
+                        {redCount > 0 && (
+                          <span className="px-2 py-0.5 bg-rose-100 text-rose-800 font-bold rounded-md border border-rose-300 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+                            <span>{redCount} Erro (Vermelho)</span>
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </div>
               )}
 
@@ -150,32 +192,92 @@ export const ImportModal: React.FC<ImportModalProps> = ({
 
           {/* Import Mode Radio */}
           {parseResult && parseResult.records.length > 0 && (
-            <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-              <label className="block text-xs font-semibold text-slate-700">
-                Opção de Importação:
-              </label>
-              <div className="flex flex-col sm:flex-row gap-3 text-xs">
-                <label className="flex items-center space-x-2 text-slate-800 cursor-pointer font-medium">
-                  <input
-                    type="radio"
-                    name="importMode"
-                    value="append"
-                    checked={importMode === 'append'}
-                    onChange={() => setImportMode('append')}
-                    className="text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300"
-                  />
-                  <span>Adicionar à lista atual (Manter existentes)</span>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-800">
+                  Como deseja importar os {parseResult.records.length} registros?
                 </label>
-                <label className="flex items-center space-x-2 text-slate-800 cursor-pointer font-medium">
+                {currentCount > 0 && (
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Sua lista atual contém <strong>{currentCount}</strong> registro(s).
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 text-xs">
+                {/* 1. REPLACE (Default) */}
+                <label className={`flex items-start space-x-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                  importMode === 'replace' 
+                    ? 'bg-indigo-50/80 border-indigo-300 ring-1 ring-indigo-500/20' 
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}>
                   <input
                     type="radio"
                     name="importMode"
                     value="replace"
                     checked={importMode === 'replace'}
                     onChange={() => setImportMode('replace')}
-                    className="text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300"
+                    className="mt-0.5 text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300"
                   />
-                  <span>Substituir lista atual completamente</span>
+                  <div>
+                    <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                      <span>Substituir lista atual completamente</span>
+                      <span className="text-[10px] bg-indigo-100 text-indigo-800 font-bold px-1.5 py-0.2 rounded">
+                        Recomendado
+                      </span>
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Carrega exatamente os registros do arquivo, evitando duplicatas com o que já estava na tela.
+                    </p>
+                  </div>
+                </label>
+
+                {/* 2. UPSERT / MERGE */}
+                <label className={`flex items-start space-x-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                  importMode === 'upsert' 
+                    ? 'bg-indigo-50/80 border-indigo-300 ring-1 ring-indigo-500/20' 
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}>
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="upsert"
+                    checked={importMode === 'upsert'}
+                    onChange={() => setImportMode('upsert')}
+                    className="mt-0.5 text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-900">
+                      Atualizar e mesclar por Inscrição Imobiliária
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Atualiza os registros existentes que tiverem a mesma inscrição e adiciona os novos sem duplicar.
+                    </p>
+                  </div>
+                </label>
+
+                {/* 3. APPEND */}
+                <label className={`flex items-start space-x-3 p-3 rounded-xl border transition-all cursor-pointer ${
+                  importMode === 'append' 
+                    ? 'bg-indigo-50/80 border-indigo-300 ring-1 ring-indigo-500/20' 
+                    : 'bg-white border-slate-200 hover:bg-slate-50'
+                }`}>
+                  <input
+                    type="radio"
+                    name="importMode"
+                    value="append"
+                    checked={importMode === 'append'}
+                    onChange={() => setImportMode('append')}
+                    className="mt-0.5 text-indigo-600 focus:ring-indigo-500 bg-white border-slate-300"
+                  />
+                  <div>
+                    <span className="font-bold text-slate-900">
+                      Adicionar ao final da lista (Acrescentar todos)
+                    </span>
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Mantém todos os registros atuais e insere os novos ao final.
+                    </p>
+                  </div>
                 </label>
               </div>
             </div>

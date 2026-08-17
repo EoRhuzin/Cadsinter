@@ -3019,6 +3019,11 @@ export const RecordForm: React.FC<RecordFormProps> = ({
         baseDadosGerais={dadosGerais}
         baseEndereco={endereco}
         baseOperacao={operacao}
+        baseAreaConstruidaCompl={areaConstruidaCompl}
+        baseTitulares={titulares}
+        baseServicoRegistroImovel={servicoRegistroImovel}
+        baseCartorioNotas={cartorioNotas}
+        baseItbi={itbi}
         onGenerateBatch={(newRecords) => {
           onAddBatchRecords(newRecords);
           setShowSuccessToast(true);

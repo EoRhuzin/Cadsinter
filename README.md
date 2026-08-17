@@ -1,5 +1,11 @@
 # 🏢 CadSinter - Gestão e Integrador Cadastral Municipal SINTER / CADURB
 
+## 🌐 Acesso ao Site Oficial (Online)
+👉 **Acesse a aplicação diretamente pelo navegador:**  
+### 🔗 [https://eorhuzin.github.io/Cadsinter/](https://eorhuzin.github.io/Cadsinter/)
+
+---
+
 > **Plataforma Web independente, gratuita e intuitiva para auxílio de gestores e servidores públicos municipais na geração, validação, gerenciamento e transmissão de arquivos imobiliários para o SINTER (Sistema Nacional de Gestão de Informações Territoriais) e CADURB da Receita Federal do Brasil.**
 
 ---
@@ -39,6 +45,12 @@ O **CadSinter** resolve os desafios técnicos desse processo:
   - **Tipo 1 - Territorial**: Terrenos e lotes vagos.
   - **Tipo 2 - Predial**: Imóveis com edificações concluídas ou em construção.
   - **Tipo 3 - BICE**: Bens de Características Especiais (pontes, portos, antenas, praças, etc.) com seleção do **Código BICE** exclusiva e validada.
+- **Controle de Gestão por Cores (Status de Revisão)**:
+  - 🟢 **Verde (OK / Aprovado)**: Imóveis conferidos e validados para envio.
+  - 🟡 **Amarelo (Atenção / Pendente)**: Imóveis que requerem verificação de certidões, áreas ou titulares.
+  - 🔴 **Vermelho (Erro / Incorreto)**: Imóveis com dados inconsistentes que precisam de correção.
+  - **Filtros e Ações em Lote**: Filtragem por cor com um clique e aplicação de status ou exclusão em massa.
+  - **Dual Export (Controle Interno vs. Oficial SINTER)**: O NDJSON de Controle Interno preserva o status e cores dos imóveis (`_statusCor`) para re-importação futura sem perder o progresso de revisão, enquanto o arquivo ZIP / NDJSON Oficial SINTER é gerado 100% limpo e estritamente aderente ao manual da Receita Federal.
 - **Formulário Completo com Tooltips Didáticos**: Ajuda em cada campo com regras oficiais da Receita Federal, exemplos de preenchimento e máscaras.
 - **Importador de Arquivos**: Importação instantânea de arquivos nos formatos `.ndjson`, `.json`, `.csv` e `.zip`.
 - **Workbench Inteligente (Tabela)**: Filtros por tipo de imóvel, busca por inscrição/endereço/titular, ordenação e pré-visualização de arquivos.

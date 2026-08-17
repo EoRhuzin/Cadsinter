@@ -101,6 +101,9 @@ export interface NDJsonRecord {
   tipoDesativacao?: number;
   motivoDesativacao?: number;
   complemento?: string;
+  // Status de Controle Interno e Auditoria (Gestão)
+  statusCor?: 'verde' | 'amarelo' | 'vermelho' | 'nenhum' | string;
+  statusNota?: string;
   // Metadata de Origem e Opções de Lote
   isBatch?: boolean;
   batchMode?: 'simples' | 'lote';

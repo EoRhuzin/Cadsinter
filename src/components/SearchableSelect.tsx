@@ -13,6 +13,7 @@ interface SearchableSelectProps {
   className?: string;
   disabled?: boolean;
   hasError?: boolean;
+  error?: string;
 }
 
 export const SearchableSelect: React.FC<SearchableSelectProps> = ({
@@ -26,12 +27,14 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
   className = '',
   disabled = false,
   hasError = false,
+  error,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const isInvalid = hasError || Boolean(error);
   const isValueEmpty = !value || value === 0 || value === '0' || value === '';
   const selectedOption = isValueEmpty ? undefined : options.find((opt) => String(opt.value) === String(value));
 
@@ -85,7 +88,7 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full bg-white border rounded-xl px-3 py-2 text-xs text-slate-800 text-left flex items-center justify-between shadow-2xs hover:border-slate-300 focus:outline-none focus:ring-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-          hasError
+          isInvalid
             ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
             : 'border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/20'
         }`}
@@ -95,6 +98,10 @@ export const SearchableSelect: React.FC<SearchableSelectProps> = ({
         </span>
         <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ml-2 shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
+
+      {error && (
+        <p className="mt-1 text-[11px] text-rose-500 font-medium">{error}</p>
+      )}
 
       {/* Dropdown Menu */}
       {isOpen && (

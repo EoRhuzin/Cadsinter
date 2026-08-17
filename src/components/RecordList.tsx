@@ -29,6 +29,7 @@ import {
   Users,
   Layers,
   Sliders,
+  Palette,
 } from 'lucide-react';
 
 interface RecordListProps {
@@ -41,8 +42,12 @@ interface RecordListProps {
   onLoadSamples: () => void;
   onClearAll?: () => void;
   onDownload?: () => void;
+  onDownloadInternal?: () => void;
+  onDownloadSinter?: () => void;
   onOpenApi?: () => void;
   onOpenZip?: () => void;
+  onBatchSetStatusColor?: (ids: string[], color: string) => void;
+  onBatchDelete?: (ids: string[]) => void;
 }
 
 export const RecordList: React.FC<RecordListProps> = ({
@@ -55,20 +60,39 @@ export const RecordList: React.FC<RecordListProps> = ({
   onLoadSamples,
   onClearAll,
   onDownload,
+  onDownloadInternal,
+  onDownloadSinter,
   onOpenApi,
   onOpenZip,
+  onBatchSetStatusColor,
+  onBatchDelete,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [colorFilter, setColorFilter] = useState<'all' | 'verde' | 'amarelo' | 'vermelho' | 'nenhum'>('all');
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Filter records based on search
+  // Count records by status color
+  const greenCount = records.filter((r) => r.statusCor === 'verde').length;
+  const yellowCount = records.filter((r) => r.statusCor === 'amarelo').length;
+  const redCount = records.filter((r) => r.statusCor === 'vermelho').length;
+  const noneCount = records.filter((r) => !r.statusCor || r.statusCor === 'nenhum').length;
+
+  // Filter records based on search and color
   const filteredRecords = records.filter((rec) => {
+    // Filter by color
+    if (colorFilter === 'verde' && rec.statusCor !== 'verde') return false;
+    if (colorFilter === 'amarelo' && rec.statusCor !== 'amarelo') return false;
+    if (colorFilter === 'vermelho' && rec.statusCor !== 'vermelho') return false;
+    if (colorFilter === 'nenhum' && rec.statusCor && rec.statusCor !== 'nenhum') return false;
+
+    // Filter by search term
     if (!searchTerm.trim()) return true;
     const term = searchTerm.toLowerCase();
-    const insc = rec.dadosGerais.inscricaoImobiliaria.toLowerCase();
-    const logr = rec.endereco.nomeLogradouro.toLowerCase();
-    const compl = rec.endereco.complNroImovel.toLowerCase();
-    const complEnd = rec.endereco.complEndereco.toLowerCase();
-    const bairro = rec.endereco.bairro.toLowerCase();
+    const insc = (rec.dadosGerais.inscricaoImobiliaria || '').toLowerCase();
+    const logr = (rec.endereco.nomeLogradouro || '').toLowerCase();
+    const compl = (rec.endereco.complNroImovel || '').toLowerCase();
+    const complEnd = (rec.endereco.complEndereco || '').toLowerCase();
+    const bairro = (rec.endereco.bairro || '').toLowerCase();
 
     return (
       insc.includes(term) ||
@@ -78,6 +102,51 @@ export const RecordList: React.FC<RecordListProps> = ({
       bairro.includes(term)
     );
   });
+
+  // Handle select all
+  const allFilteredSelected =
+    filteredRecords.length > 0 &&
+    filteredRecords.every((r) => selectedIds.includes(r.id));
+
+  const handleToggleSelectAll = () => {
+    if (allFilteredSelected) {
+      setSelectedIds((prev) => prev.filter((id) => !filteredRecords.some((r) => r.id === id)));
+    } else {
+      const idsToAdd = filteredRecords.map((r) => r.id);
+      setSelectedIds((prev) => Array.from(new Set([...prev, ...idsToAdd])));
+    }
+  };
+
+  const handleToggleSelectRecord = (id: string) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  // Bulk color setter
+  const handleApplyBulkColor = (color: string) => {
+    if (selectedIds.length === 0) return;
+    if (onBatchSetStatusColor) {
+      onBatchSetStatusColor(selectedIds, color);
+    } else if (onUpdateRecordField) {
+      selectedIds.forEach((id) => {
+        onUpdateRecordField(id, 'statusCor', color);
+      });
+    }
+  };
+
+  // Bulk delete
+  const handleApplyBulkDelete = () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Deseja remover os ${selectedIds.length} registro(s) selecionado(s)?`)) {
+      if (onBatchDelete) {
+        onBatchDelete(selectedIds);
+      } else {
+        selectedIds.forEach((id) => onDeleteRecord(id));
+      }
+      setSelectedIds([]);
+    }
+  };
 
   if (records.length === 0) {
     return (
@@ -148,6 +217,8 @@ export const RecordList: React.FC<RecordListProps> = ({
             <SendOptionsDropdown
               count={records.length}
               onDownload={onDownload}
+              onDownloadInternal={onDownloadInternal}
+              onDownloadSinter={onDownloadSinter}
               onOpenApi={onOpenApi}
               onOpenZip={onOpenZip}
               variant="primary"
@@ -170,12 +241,166 @@ export const RecordList: React.FC<RecordListProps> = ({
 
       </div>
 
+      {/* Filter and Bulk Action Toolbar */}
+      <div className="bg-slate-50/50 px-6 py-2.5 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        {/* Status Color Filter Pills */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="text-[11px] font-bold text-slate-500 mr-1 flex items-center gap-1">
+            <Palette className="w-3.5 h-3.5 text-slate-400" />
+            <span>Filtro Gestão:</span>
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setColorFilter('all')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+              colorFilter === 'all'
+                ? 'bg-slate-800 text-white shadow-2xs'
+                : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
+            }`}
+          >
+            Todos ({records.length})
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setColorFilter('verde')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              colorFilter === 'verde'
+                ? 'bg-emerald-600 text-white shadow-2xs'
+                : 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+            }`}
+          >
+            <span>🟢 OK</span>
+            <span className="opacity-90 font-mono text-[10px]">({greenCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setColorFilter('amarelo')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              colorFilter === 'amarelo'
+                ? 'bg-amber-500 text-slate-950 shadow-2xs'
+                : 'bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100'
+            }`}
+          >
+            <span>🟡 Atenção</span>
+            <span className="opacity-90 font-mono text-[10px]">({yellowCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setColorFilter('vermelho')}
+            className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+              colorFilter === 'vermelho'
+                ? 'bg-rose-600 text-white shadow-2xs'
+                : 'bg-rose-50 text-rose-800 border border-rose-200 hover:bg-rose-100'
+            }`}
+          >
+            <span>🔴 Erro</span>
+            <span className="opacity-90 font-mono text-[10px]">({redCount})</span>
+          </button>
+
+          {noneCount > 0 && (
+            <button
+              type="button"
+              onClick={() => setColorFilter('nenhum')}
+              className={`px-2 py-1 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                colorFilter === 'nenhum'
+                  ? 'bg-slate-400 text-white shadow-2xs'
+                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              Sem cor ({noneCount})
+            </button>
+          )}
+        </div>
+
+        {/* Bulk Action Controls if items selected */}
+        {selectedIds.length > 0 && (
+          <div className="flex items-center gap-2 bg-indigo-50 border border-indigo-200 px-3 py-1.5 rounded-xl animate-fade-in text-xs font-bold">
+            <span className="text-indigo-900 font-mono">
+              {selectedIds.length} selecionado(s):
+            </span>
+
+            {/* Set Green */}
+            <button
+              type="button"
+              onClick={() => handleApplyBulkColor('verde')}
+              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-2xs transition-all cursor-pointer"
+              title="Marcar selecionados como OK / Verde"
+            >
+              🟢 OK
+            </button>
+
+            {/* Set Yellow */}
+            <button
+              type="button"
+              onClick={() => handleApplyBulkColor('amarelo')}
+              className="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-lg shadow-2xs transition-all cursor-pointer"
+              title="Marcar selecionados como Atenção / Amarelo"
+            >
+              🟡 Atenção
+            </button>
+
+            {/* Set Red */}
+            <button
+              type="button"
+              onClick={() => handleApplyBulkColor('vermelho')}
+              className="px-2 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-lg shadow-2xs transition-all cursor-pointer"
+              title="Marcar selecionados como Erro / Vermelho"
+            >
+              🔴 Erro
+            </button>
+
+            {/* Clear color */}
+            <button
+              type="button"
+              onClick={() => handleApplyBulkColor('nenhum')}
+              className="px-2 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-lg shadow-2xs transition-all cursor-pointer text-[11px]"
+              title="Limpar status dos selecionados"
+            >
+              Limpar Cor
+            </button>
+
+            {/* Bulk Delete */}
+            <button
+              type="button"
+              onClick={handleApplyBulkDelete}
+              className="px-2 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg transition-all cursor-pointer text-[11px] flex items-center gap-1"
+              title="Excluir selecionados"
+            >
+              <Trash2 className="w-3 h-3 text-rose-600" />
+              <span>Excluir</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSelectedIds([])}
+              className="text-[10px] text-slate-400 hover:text-slate-600 underline cursor-pointer ml-1"
+            >
+              Desmarcar
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* Table View */}
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-              <th className="py-3 px-3 w-10 text-center">#</th>
+              <th className="py-3 px-3 w-8 text-center">
+                <input
+                  type="checkbox"
+                  checked={allFilteredSelected}
+                  onChange={handleToggleSelectAll}
+                  className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  title="Selecionar todos os registros visíveis"
+                />
+              </th>
+              <th className="py-3 px-2 w-10 text-center">#</th>
+              <th className="py-3 px-3 w-32">Status / Gestão</th>
               <th className="py-3 px-3 w-40">Inscrição</th>
               <th className="py-3 px-3">Dados e Opções Selecionadas</th>
               <th className="py-3 px-3 text-right w-24">Ações</th>
@@ -194,15 +419,40 @@ export const RecordList: React.FC<RecordListProps> = ({
               const isBatch = !!rec.isBatch;
               const alteredOpts = rec.alteredOptions || ['complNroImovel'];
 
+              const isSelected = selectedIds.includes(rec.id);
+              const isGreen = rec.statusCor === 'verde';
+              const isYellow = rec.statusCor === 'amarelo';
+              const isRed = rec.statusCor === 'vermelho';
+
+              const rowBgClass = isGreen
+                ? 'border-l-[6px] border-l-emerald-500 bg-emerald-100/40 hover:bg-emerald-100/70 border-b border-emerald-200/60'
+                : isYellow
+                ? 'border-l-[6px] border-l-amber-500 bg-amber-100/40 hover:bg-amber-100/70 border-b border-amber-200/60'
+                : isRed
+                ? 'border-l-[6px] border-l-rose-500 bg-rose-100/40 hover:bg-rose-100/70 border-b border-rose-200/60'
+                : !valResult.isValid
+                ? 'bg-rose-50/40'
+                : isBatch
+                ? 'bg-indigo-50/20'
+                : 'hover:bg-slate-50/70';
+
               return (
                 <tr
                   key={rec.id}
-                  className={`hover:bg-slate-50/60 transition-colors group ${
-                    !valResult.isValid ? 'bg-rose-50/30' : isBatch ? 'bg-indigo-50/10' : ''
-                  }`}
+                  className={`transition-colors group ${rowBgClass}`}
                 >
+                  {/* Checkbox column */}
+                  <td className="py-2.5 px-3 text-center">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleToggleSelectRecord(rec.id)}
+                      className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                    />
+                  </td>
+
                   {/* # - Index number & reordering controls */}
-                  <td className="py-2.5 px-3 text-center font-mono text-slate-400">
+                  <td className="py-2.5 px-2 text-center font-mono text-slate-400">
                     <div className="flex flex-col items-center">
                       <span className="font-bold text-slate-700">{originalIndex + 1}</span>
                       <div className="flex items-center space-x-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -224,6 +474,90 @@ export const RecordList: React.FC<RecordListProps> = ({
                         >
                           <ArrowDown className="w-3 h-3" />
                         </button>
+                      </div>
+                    </div>
+                  </td>
+
+                  {/* Status / Color Selector column */}
+                  <td className="py-2.5 px-3 whitespace-nowrap">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-1.5">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateRecordField?.(
+                              rec.id,
+                              'statusCor',
+                              rec.statusCor === 'verde' ? 'nenhum' : 'verde'
+                            )
+                          }
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-transform active:scale-90 cursor-pointer ${
+                            rec.statusCor === 'verde'
+                              ? 'bg-emerald-500 text-white shadow-xs ring-2 ring-emerald-300 scale-110 font-bold'
+                              : 'bg-emerald-100/70 hover:bg-emerald-200 text-emerald-800 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Marcar Verde (OK / Aprovado)"
+                        >
+                          🟢
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateRecordField?.(
+                              rec.id,
+                              'statusCor',
+                              rec.statusCor === 'amarelo' ? 'nenhum' : 'amarelo'
+                            )
+                          }
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-transform active:scale-90 cursor-pointer ${
+                            rec.statusCor === 'amarelo'
+                              ? 'bg-amber-500 text-slate-950 shadow-xs ring-2 ring-amber-300 scale-110 font-bold'
+                              : 'bg-amber-100/70 hover:bg-amber-200 text-amber-900 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Marcar Amarelo (Atenção / Pendente)"
+                        >
+                          🟡
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onUpdateRecordField?.(
+                              rec.id,
+                              'statusCor',
+                              rec.statusCor === 'vermelho' ? 'nenhum' : 'vermelho'
+                            )
+                          }
+                          className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] transition-transform active:scale-90 cursor-pointer ${
+                            rec.statusCor === 'vermelho'
+                              ? 'bg-rose-500 text-white shadow-xs ring-2 ring-rose-300 scale-110 font-bold'
+                              : 'bg-rose-100/70 hover:bg-rose-200 text-rose-800 opacity-60 hover:opacity-100'
+                          }`}
+                          title="Marcar Vermelho (Erro / Incorreto)"
+                        >
+                          🔴
+                        </button>
+                      </div>
+
+                      <div>
+                        {rec.statusCor === 'verde' ? (
+                          <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100/90 px-1.5 py-0.5 rounded border border-emerald-300/80 inline-block">
+                            OK / Aprovado
+                          </span>
+                        ) : rec.statusCor === 'amarelo' ? (
+                          <span className="text-[9px] font-bold text-amber-800 bg-amber-100/90 px-1.5 py-0.5 rounded border border-amber-300/80 inline-block">
+                            Atenção / Pendente
+                          </span>
+                        ) : rec.statusCor === 'vermelho' ? (
+                          <span className="text-[9px] font-bold text-rose-700 bg-rose-100/90 px-1.5 py-0.5 rounded border border-rose-300/80 inline-block">
+                            Erro / Incorreto
+                          </span>
+                        ) : (
+                          <span className="text-[9px] text-slate-400 font-medium italic">
+                            Sem status
+                          </span>
+                        )}
                       </div>
                     </div>
                   </td>
@@ -282,7 +616,7 @@ export const RecordList: React.FC<RecordListProps> = ({
                             {onUpdateRecordField ? (
                               <input
                                 type="text"
-                                value={rec.endereco.complNroImovel}
+                                value={rec.endereco.complNroImovel || ''}
                                 onChange={(e) => onUpdateRecordField(rec.id, 'endereco.complNroImovel', e.target.value)}
                                 placeholder="ex: APTO 101"
                                 className="w-28 bg-white border border-indigo-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-indigo-900"
@@ -302,7 +636,7 @@ export const RecordList: React.FC<RecordListProps> = ({
                             {onUpdateRecordField ? (
                               <input
                                 type="text"
-                                value={rec.endereco.numeroImovel}
+                                value={rec.endereco.numeroImovel || ''}
                                 onChange={(e) => onUpdateRecordField(rec.id, 'endereco.numeroImovel', e.target.value)}
                                 placeholder="S/N"
                                 className="w-16 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-bold text-xs text-slate-800"
@@ -320,7 +654,7 @@ export const RecordList: React.FC<RecordListProps> = ({
                             {onUpdateRecordField ? (
                               <input
                                 type="text"
-                                value={rec.endereco.bairro}
+                                value={rec.endereco.bairro || ''}
                                 onChange={(e) => onUpdateRecordField(rec.id, 'endereco.bairro', e.target.value)}
                                 placeholder="Bairro"
                                 className="w-28 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-xs text-slate-800"
@@ -338,7 +672,7 @@ export const RecordList: React.FC<RecordListProps> = ({
                             {onUpdateRecordField ? (
                               <input
                                 type="text"
-                                value={rec.endereco.nomeLogradouro}
+                                value={rec.endereco.nomeLogradouro || ''}
                                 onChange={(e) => onUpdateRecordField(rec.id, 'endereco.nomeLogradouro', e.target.value)}
                                 placeholder="Logradouro"
                                 className="w-36 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-xs text-slate-800"
@@ -378,7 +712,7 @@ export const RecordList: React.FC<RecordListProps> = ({
                             {onUpdateRecordField ? (
                               <input
                                 type="text"
-                                value={rec.endereco.complEndereco}
+                                value={rec.endereco.complEndereco || ''}
                                 onChange={(e) => onUpdateRecordField(rec.id, 'endereco.complEndereco', e.target.value)}
                                 placeholder="Complemento"
                                 className="w-28 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 text-xs text-slate-800"
@@ -397,7 +731,7 @@ export const RecordList: React.FC<RecordListProps> = ({
                               <input
                                 type="text"
                                 maxLength={8}
-                                value={rec.endereco.cep}
+                                value={rec.endereco.cep || ''}
                                 onChange={(e) => onUpdateRecordField(rec.id, 'endereco.cep', e.target.value)}
                                 placeholder="00000000"
                                 className="w-20 bg-white border border-slate-200 focus:border-indigo-500 rounded px-1.5 py-0.5 font-mono text-xs text-slate-800"
@@ -730,16 +1064,38 @@ export const RecordList: React.FC<RecordListProps> = ({
           const isBatch = !!rec.isBatch;
           const alteredOpts = rec.alteredOptions || ['complNroImovel'];
 
+          const isSelected = selectedIds.includes(rec.id);
+          const isGreen = rec.statusCor === 'verde';
+          const isYellow = rec.statusCor === 'amarelo';
+          const isRed = rec.statusCor === 'vermelho';
+
+          const mobileCardBg =
+            isGreen
+              ? 'border-l-[6px] border-l-emerald-500 bg-emerald-50/90 border border-emerald-200/80 shadow-2xs'
+              : isYellow
+              ? 'border-l-[6px] border-l-amber-500 bg-amber-50/90 border border-amber-200/80 shadow-2xs'
+              : isRed
+              ? 'border-l-[6px] border-l-rose-500 bg-rose-50/90 border border-rose-200/80 shadow-2xs'
+              : !valResult.isValid
+              ? 'bg-rose-50/30'
+              : isBatch
+              ? 'bg-indigo-50/10'
+              : '';
+
           return (
             <div
               key={rec.id}
-              className={`p-4 space-y-3 hover:bg-slate-50/60 transition-colors ${
-                !valResult.isValid ? 'bg-rose-50/30' : isBatch ? 'bg-indigo-50/10' : ''
-              }`}
+              className={`p-4 space-y-3 hover:bg-slate-50/60 transition-colors ${mobileCardBg}`}
             >
-              {/* Header: Index, Inscrição & Badges */}
+              {/* Header: Checkbox, Index, Inscrição & Color Selector */}
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-2">
                 <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={() => handleToggleSelectRecord(rec.id)}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  />
                   <span className="font-mono text-xs font-bold text-slate-400">
                     #{originalIndex + 1}
                   </span>
@@ -759,22 +1115,96 @@ export const RecordList: React.FC<RecordListProps> = ({
                   )}
                 </div>
 
-                <div className="flex items-center gap-1">
-                  {isBatch ? (
-                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
-                      <Layers className="w-2.5 h-2.5 text-indigo-600" />
-                      <span>Lote</span>
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
-                      <Tag className="w-2.5 h-2.5 text-emerald-600" />
-                      <span>Individual</span>
-                    </span>
-                  )}
+                {/* Status Color buttons on mobile */}
+                <div className="flex items-center space-x-1">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateRecordField?.(
+                        rec.id,
+                        'statusCor',
+                        rec.statusCor === 'verde' ? 'nenhum' : 'verde'
+                      )
+                    }
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] cursor-pointer ${
+                      rec.statusCor === 'verde'
+                        ? 'bg-emerald-500 text-white ring-2 ring-emerald-300 scale-110 font-bold'
+                        : 'bg-emerald-100 text-emerald-800 opacity-60'
+                    }`}
+                    title="Verde (OK)"
+                  >
+                    🟢
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateRecordField?.(
+                        rec.id,
+                        'statusCor',
+                        rec.statusCor === 'amarelo' ? 'nenhum' : 'amarelo'
+                      )
+                    }
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] cursor-pointer ${
+                      rec.statusCor === 'amarelo'
+                        ? 'bg-amber-500 text-slate-950 ring-2 ring-amber-300 scale-110 font-bold'
+                        : 'bg-amber-100 text-amber-900 opacity-60'
+                    }`}
+                    title="Amarelo (Atenção)"
+                  >
+                    🟡
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      onUpdateRecordField?.(
+                        rec.id,
+                        'statusCor',
+                        rec.statusCor === 'vermelho' ? 'nenhum' : 'vermelho'
+                      )
+                    }
+                    className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] cursor-pointer ${
+                      rec.statusCor === 'vermelho'
+                        ? 'bg-rose-500 text-white ring-2 ring-rose-300 scale-110 font-bold'
+                        : 'bg-rose-100 text-rose-800 opacity-60'
+                    }`}
+                    title="Vermelho (Erro)"
+                  >
+                    🔴
+                  </button>
+                </div>
 
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                    Op: {rec.operacao || 'I'}
-                  </span>
+                <div className="flex items-center gap-1 w-full justify-between pt-1">
+                  <div className="flex items-center gap-1">
+                    {isBatch ? (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-indigo-100 text-indigo-800 border border-indigo-200">
+                        <Layers className="w-2.5 h-2.5 text-indigo-600" />
+                        <span>Lote</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                        <Tag className="w-2.5 h-2.5 text-emerald-600" />
+                        <span>Individual</span>
+                      </span>
+                    )}
+
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                      Op: {rec.operacao || 'I'}
+                    </span>
+                  </div>
+
+                  {rec.statusCor === 'verde' ? (
+                    <span className="text-[9px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded border border-emerald-300">
+                      OK / Aprovado
+                    </span>
+                  ) : rec.statusCor === 'amarelo' ? (
+                    <span className="text-[9px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
+                      Atenção / Pendente
+                    </span>
+                  ) : rec.statusCor === 'vermelho' ? (
+                    <span className="text-[9px] font-bold text-rose-700 bg-rose-100 px-1.5 py-0.5 rounded border border-rose-300">
+                      Erro / Incorreto
+                    </span>
+                  ) : null}
                 </div>
               </div>
 

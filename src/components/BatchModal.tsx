@@ -21,7 +21,16 @@ import {
   ShieldCheck,
   Info,
 } from 'lucide-react';
-import { NDJsonRecord, DadosGeraisImovel, EnderecoImovel } from '../types';
+import {
+  NDJsonRecord,
+  DadosGeraisImovel,
+  EnderecoImovel,
+  AreaConstruidaCompl,
+  TitularItem,
+  ServicoRegistroImovel,
+  CartorioNotas,
+  ITBI,
+} from '../types';
 
 interface BatchModalProps {
   isOpen: boolean;
@@ -29,6 +38,11 @@ interface BatchModalProps {
   baseDadosGerais: DadosGeraisImovel;
   baseEndereco: EnderecoImovel;
   baseOperacao: string;
+  baseAreaConstruidaCompl?: AreaConstruidaCompl;
+  baseTitulares?: TitularItem[];
+  baseServicoRegistroImovel?: ServicoRegistroImovel;
+  baseCartorioNotas?: CartorioNotas;
+  baseItbi?: ITBI;
   onGenerateBatch: (records: Omit<NDJsonRecord, 'id'>[]) => void;
 }
 
@@ -89,6 +103,11 @@ export const BatchModal: React.FC<BatchModalProps> = ({
   baseDadosGerais,
   baseEndereco,
   baseOperacao,
+  baseAreaConstruidaCompl,
+  baseTitulares,
+  baseServicoRegistroImovel,
+  baseCartorioNotas,
+  baseItbi,
   onGenerateBatch,
 }) => {
   const [quantity, setQuantity] = useState<number>(10);
@@ -179,14 +198,104 @@ export const BatchModal: React.FC<BatchModalProps> = ({
       const currentDadosGerais: DadosGeraisImovel = { ...baseDadosGerais };
       const currentEndereco: EnderecoImovel = { ...baseEndereco };
       let currentOperacao = baseOperacao;
+      let currentAreaConstruidaCompl: AreaConstruidaCompl | undefined = baseAreaConstruidaCompl ? { ...baseAreaConstruidaCompl } : undefined;
+      let currentTitulares: TitularItem[] | undefined = baseTitulares ? [...baseTitulares] : undefined;
+      let currentServicoRegistroImovel: ServicoRegistroImovel | undefined = baseServicoRegistroImovel ? { ...baseServicoRegistroImovel } : undefined;
+      let currentCartorioNotas: CartorioNotas | undefined = baseCartorioNotas ? { ...baseCartorioNotas } : undefined;
+      let currentItbi: ITBI | undefined = baseItbi ? JSON.parse(JSON.stringify(baseItbi)) : undefined;
 
       // Set inscription
       currentDadosGerais.inscricaoImobiliaria = currentInsc;
+
+      // Clear fields marked for alteration so they come BLANK / EMPTY for the user to fill in the table
+      if (fieldsToAlter['complNroImovel']) {
+        currentEndereco.complNroImovel = '';
+      }
+      if (fieldsToAlter['numeroImovel']) {
+        currentEndereco.numeroImovel = '';
+      }
+      if (fieldsToAlter['bairro']) {
+        currentEndereco.bairro = '';
+      }
+      if (fieldsToAlter['nomeLogradouro']) {
+        currentEndereco.nomeLogradouro = '';
+      }
+      if (fieldsToAlter['complEndereco']) {
+        currentEndereco.complEndereco = '';
+      }
+      if (fieldsToAlter['cep']) {
+        currentEndereco.cep = '';
+      }
+      if (fieldsToAlter['tipoLogradouro']) {
+        currentEndereco.tipoLogradouro = 250;
+      }
+
+      if (fieldsToAlter['areaConstruida']) {
+        currentDadosGerais.areaConstruida = 0;
+      }
+      if (fieldsToAlter['areaTerreno']) {
+        currentDadosGerais.areaTerreno = 0;
+      }
+      if (fieldsToAlter['valorVenal']) {
+        currentDadosGerais.valorVenal = undefined;
+      }
+      if (fieldsToAlter['anoConstrutivo']) {
+        currentDadosGerais.anoConstrutivo = 0;
+      }
+      if (fieldsToAlter['padraoConstrutivo']) {
+        currentDadosGerais.padraoConstrutivo = undefined;
+      }
+      if (fieldsToAlter['qtdGaragem']) {
+        currentDadosGerais.qtdGaragem = undefined;
+      }
+      if (fieldsToAlter['temPiscina']) {
+        currentDadosGerais.temPiscina = false;
+      }
+      if (fieldsToAlter['bice']) {
+        currentDadosGerais.bice = undefined;
+      }
+      if (fieldsToAlter['idParcela']) {
+        currentDadosGerais.idParcela = '';
+      }
+      if (fieldsToAlter['valorRefMercado']) {
+        currentDadosGerais.valorRefMercado = undefined;
+      }
+
+      if (fieldsToAlter['areaPrivativa']) {
+        if (!currentAreaConstruidaCompl) currentAreaConstruidaCompl = {};
+        currentAreaConstruidaCompl.areaPrivativa = undefined;
+      }
+      if (fieldsToAlter['areaComum']) {
+        if (!currentAreaConstruidaCompl) currentAreaConstruidaCompl = {};
+        currentAreaConstruidaCompl.areaComum = undefined;
+      }
+      if (fieldsToAlter['fraIdeal']) {
+        if (!currentAreaConstruidaCompl) currentAreaConstruidaCompl = {};
+        currentAreaConstruidaCompl.fraIdeal = undefined;
+      }
+
+      if (fieldsToAlter['titulares']) {
+        currentTitulares = [];
+      }
+      if (fieldsToAlter['servicoRegistroImovel']) {
+        currentServicoRegistroImovel = {};
+      }
+      if (fieldsToAlter['cartorioNotas']) {
+        currentCartorioNotas = {};
+      }
+      if (fieldsToAlter['itbi']) {
+        currentItbi = {};
+      }
 
       newRecords.push({
         dadosGerais: currentDadosGerais,
         endereco: currentEndereco,
         operacao: currentOperacao,
+        areaConstruidaCompl: currentAreaConstruidaCompl,
+        titulares: currentTitulares,
+        servicoRegistroImovel: currentServicoRegistroImovel,
+        cartorioNotas: currentCartorioNotas,
+        itbi: currentItbi,
         isBatch: true,
         batchMode: 'lote',
         alteredOptions: activeAlteredOptions.length > 0 ? activeAlteredOptions : ['complNroImovel'],
@@ -290,7 +399,7 @@ export const BatchModal: React.FC<BatchModalProps> = ({
                 <span>2. Seleção de Opções/Campos para Alteração no Lote</span>
               </span>
               <p className="text-[11px] text-indigo-800">
-                Abaixo estão <strong>todas as opções</strong> do esquema SINTER/CADURB separadas por seção. Marque as que deseja liberar na tabela.
+                Abaixo estão <strong>todas as opções</strong> do esquema SINTER/CADURB. Os campos que você marcar <strong>virão em branco nos novos registros</strong> para você preenchê-los diretamente na tabela.
               </p>
             </div>
 

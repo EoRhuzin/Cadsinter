@@ -38,7 +38,8 @@ export const ZipModal: React.FC<ZipModalProps> = ({ isOpen, onClose, records }) 
     setIsGenerating(true);
     try {
       const zip = new JSZip();
-      const ndjsonContent = recordsToNDJsonContent(records);
+      // Ensure strict SINTER standard (no internal tags) for the official ZIP file
+      const ndjsonContent = recordsToNDJsonContent(records, { forSinter: true });
       zip.file(defaultNdjsonName, ndjsonContent);
 
       const blob = await zip.generateAsync({ type: 'blob' });

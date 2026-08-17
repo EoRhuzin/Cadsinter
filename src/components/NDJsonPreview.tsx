@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { NDJsonRecord } from '../types';
 import { recordsToNDJsonContent, downloadFile } from '../utils/ndjson';
-import { Code, Copy, Check, FileText, Eye } from 'lucide-react';
+import { Code, Copy, Check, FileText, Eye, ShieldCheck, Palette } from 'lucide-react';
 import { SendOptionsDropdown } from './SendOptionsDropdown';
 
 interface NDJsonPreviewProps {
@@ -13,8 +13,12 @@ interface NDJsonPreviewProps {
 export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi, onOpenZip }) => {
   const [copied, setCopied] = useState(false);
   const [wordWrap, setWordWrap] = useState(false);
+  const [previewMode, setPreviewMode] = useState<'sinter' | 'internal'>('internal');
 
-  const rawNDJson = recordsToNDJsonContent(records);
+  const rawNDJson = recordsToNDJsonContent(records, {
+    includeInternalStatus: previewMode === 'internal',
+    forSinter: previewMode === 'sinter',
+  });
 
   const handleCopy = async () => {
     if (!rawNDJson) return;
@@ -35,9 +39,17 @@ export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi
     }
   };
 
-  const handleDownload = () => {
+  const handleDownloadInternal = () => {
     if (records.length > 0) {
-      downloadFile(rawNDJson, 'imoveis_cadastrados.ndjson');
+      const content = recordsToNDJsonContent(records, { includeInternalStatus: true });
+      downloadFile(content, 'imoveis_controle_interno.ndjson');
+    }
+  };
+
+  const handleDownloadSinter = () => {
+    if (records.length > 0) {
+      const content = recordsToNDJsonContent(records, { forSinter: true });
+      downloadFile(content, 'imoveis_sinter_oficial.ndjson');
     }
   };
 
@@ -59,14 +71,46 @@ export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi
               </span>
             </h3>
             <p className="text-xs text-slate-500">
-              Cada linha do código abaixo é um objeto JSON válido separado por quebra de linha (\n).
+              {previewMode === 'sinter' 
+                ? 'Estrutura 100% estrita e homologada para envio SINTER / Receita Federal.' 
+                : 'Formato de controle interno incluindo etiquetas de status (_statusCor) para gestão.'}
             </p>
           </div>
         </div>
 
         {/* Action Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           
+          {/* Format Mode Toggle */}
+          <div className="flex items-center bg-slate-200/70 p-0.5 rounded-xl border border-slate-200 text-xs">
+            <button
+              type="button"
+              onClick={() => setPreviewMode('sinter')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                previewMode === 'sinter'
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Visualizar no formato estrito para envio ao SINTER"
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>Oficial SINTER</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setPreviewMode('internal')}
+              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
+                previewMode === 'internal'
+                  ? 'bg-indigo-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Visualizar no formato de controle interno com status de cores"
+            >
+              <Palette className="w-3.5 h-3.5" />
+              <span>Controle Interno</span>
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={() => setWordWrap(!wordWrap)}
@@ -98,14 +142,16 @@ export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-slate-500" />
-                <span>Copiar Conteúdo</span>
+                <span>Copiar</span>
               </>
             )}
           </button>
 
           <SendOptionsDropdown
             count={records.length}
-            onDownload={handleDownload}
+            onDownload={handleDownloadInternal}
+            onDownloadInternal={handleDownloadInternal}
+            onDownloadSinter={handleDownloadSinter}
             onOpenApi={onOpenApi}
             onOpenZip={onOpenZip}
             variant="primary"
@@ -124,7 +170,10 @@ export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi
         ) : (
           <div className="space-y-1">
             {records.map((record, index) => {
-              const line = recordsToNDJsonContent([record]);
+              const line = recordsToNDJsonContent([record], {
+                includeInternalStatus: previewMode === 'internal',
+                forSinter: previewMode === 'sinter',
+              });
               return (
                 <div key={record.id} className="flex items-start space-x-3 group hover:bg-slate-800/80 p-1 rounded-md transition-colors">
                   <span className="text-slate-500 select-none text-right font-semibold w-8 shrink-0">
@@ -144,10 +193,19 @@ export const NDJsonPreview: React.FC<NDJsonPreviewProps> = ({ records, onOpenApi
         )}
       </div>
 
-      {/* Code Footer info */}
-      <div className="bg-slate-50 border-t border-slate-200 px-6 py-2.5 text-[11px] text-slate-500 flex items-center justify-between font-mono">
-        <span>Formato: NDJSON (UTF-8)</span>
-        <span>Linhas: {records.length} | Caracteres: {rawNDJson.length}</span>
+      {/* Footer Info Notice */}
+      <div className="bg-slate-50 px-6 py-2.5 border-t border-slate-200 text-[11px] text-slate-500 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5">
+          <span className={`w-2 h-2 rounded-full ${previewMode === 'sinter' ? 'bg-emerald-500' : 'bg-indigo-500'}`} />
+          <span>
+            {previewMode === 'sinter'
+              ? 'Padrão Oficial SINTER: Linha limpa sem campos extras, homologada para o portal da Receita Federal.'
+              : 'Padrão Controle Interno: Salva a propriedade _statusCor para auditoria, gestão e reimportação.'}
+          </span>
+        </div>
+        <div className="font-mono text-[10px] text-slate-400">
+          Linhas: {records.length} | Caracteres: {rawNDJson.length}
+        </div>
       </div>
 
     </div>
